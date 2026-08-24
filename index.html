@@ -105,6 +105,10 @@
   .campaign-strip-row:last-child{border-bottom:none;}
   .campaign-label{font-size:11.5px;color:var(--ink-dim);margin-bottom:8px;}
   .adset-block-top{margin-top:10px;}
+  .changelog{font-size:12px;color:var(--ink-dim);}
+  .changelog-entry{padding:5px 0;border-bottom:1px solid var(--line);}
+  .changelog-entry:last-child{border-bottom:none;}
+  .changelog-entry b{color:var(--ink);display:block;margin-bottom:2px;font-size:11.5px;}
   @media(max-width:640px){
     .cal-day{min-height:46px;padding:2px 2px 18px;}
     .cal-post{font-size:9px;padding:1px 3px;}
@@ -163,6 +167,46 @@ function emptyClientData(name){
 }
 function emptyTargeting(){
   return { age:'', gender:'不限', location:'', interests:'', placement:'' };
+}
+
+/* ---------- targeting change log (auto-detected on ad set edit, shown to admin + client) ---------- */
+function splitInterests(s){
+  return (s||'').split(/[,，、]/).map(x=>x.trim()).filter(Boolean);
+}
+function diffTargeting(oldTg, newTg){
+  oldTg = oldTg || emptyTargeting();
+  newTg = newTg || emptyTargeting();
+  const labels = { age:'年齡層', gender:'性別', location:'地區', placement:'版位' };
+  const changes = [];
+  Object.keys(labels).forEach(f => {
+    const from = (oldTg[f]||'').trim(), to = (newTg[f]||'').trim();
+    if(from !== to) changes.push({ field:f, label:labels[f], from: from||'—', to: to||'—' });
+  });
+  const oldInt = splitInterests(oldTg.interests), newInt = splitInterests(newTg.interests);
+  if(oldInt.join('|') !== newInt.join('|')){
+    const added = newInt.filter(x=>!oldInt.includes(x));
+    const removed = oldInt.filter(x=>!newInt.includes(x));
+    if(added.length || removed.length) changes.push({ field:'interests', label:'興趣', added, removed });
+    else changes.push({ field:'interests', label:'興趣', from: oldTg.interests||'—', to: newTg.interests||'—' });
+  }
+  return changes;
+}
+function describeChangeHtml(ch){
+  if(ch.added || ch.removed){
+    const parts = [];
+    if(ch.added && ch.added.length) parts.push('新增「'+ch.added.map(escapeHtml).join('、')+'」');
+    if(ch.removed && ch.removed.length) parts.push('移除「'+ch.removed.map(escapeHtml).join('、')+'」');
+    return escapeHtml(ch.label)+'：'+parts.join('，');
+  }
+  return escapeHtml(ch.label)+'：'+escapeHtml(ch.from)+' → '+escapeHtml(ch.to);
+}
+function renderChangeLog(changeLog){
+  if(!changeLog || !changeLog.length) return '';
+  const entries = changeLog.slice().reverse().map(entry => {
+    const items = (entry.changes||[]).map(ch=>`<div>${describeChangeHtml(ch)}</div>`).join('');
+    return `<div class="changelog-entry"><b>${escapeHtml(entry.date)}</b>${items}</div>`;
+  }).join('');
+  return `<div class="section-label" style="margin-top:10px">投放調整紀錄</div><div class="changelog">${entries}</div>`;
 }
 
 /* Legacy flat "ads" array (pre Campaign > Ad Set > Ad) -> nested campaigns shape.
@@ -302,6 +346,7 @@ function renderPublicAdSetBlock(c, as){
       <div>版位：<b>${escapeHtml(tg.placement)||'—'}</b></div>
       <div style="grid-column:1/-1">興趣 / 受眾特徵：<b>${escapeHtml(tg.interests)||'—'}</b></div>
     </div>
+    ${renderChangeLog(as.changeLog)}
     ${ads.length ? `<div class="tablewrap"><table style="margin-top:8px">
       <tr><th>廣告名稱</th><th>花費</th><th>觸及</th><th>點擊</th><th>CTR</th><th>${obj.resultLabel}</th><th>${obj.costLabel}</th></tr>
       ${adRows}
@@ -788,6 +833,7 @@ function renderAdSetBlock(c, as){
       <div>預算：<b>HK$${(+as.budgetHKD||0).toLocaleString()}</b></div>
       <div style="grid-column:1/-1">目標受眾：<b>${escapeHtml(tgSummary)}</b></div>
     </div>
+    ${renderChangeLog(as.changeLog)}
     ${ads.length ? `<div class="tablewrap"><table style="margin-top:8px">
       <tr><th>廣告名稱</th><th>花費</th><th>觸及</th><th>點擊</th><th>CTR</th><th>${obj.resultLabel}</th><th>${obj.costLabel}</th><th></th></tr>
       ${rows}
@@ -924,13 +970,21 @@ function showAdSetForm(campId, adsetId){
     as.endDate = document.getElementById('f_as_end').value;
     as.budgetHKD = +document.getElementById('f_as_budget').value || 0;
     as.ads = as.ads || [];
-    as.targeting = {
+    const newTargeting = {
       age: document.getElementById('f_as_age').value,
       gender: document.getElementById('f_as_gender').value,
       location: document.getElementById('f_as_location').value,
       placement: document.getElementById('f_as_placement').value,
       interests: document.getElementById('f_as_interests').value
     };
+    if(adsetId){
+      const changes = diffTargeting(as.targeting, newTargeting);
+      if(changes.length){
+        as.changeLog = as.changeLog || [];
+        as.changeLog.push({ id: uid(), date: new Date().toISOString().slice(0,10), changes });
+      }
+    }
+    as.targeting = newTargeting;
     const idx = camp.adsets.findIndex(x=>x.id===as.id);
     if(idx>=0) camp.adsets[idx]=as; else camp.adsets.push(as);
     await saveClient(currentId, currentData);
@@ -1049,6 +1103,7 @@ function renderSyncTab(){
       <p style="font-size:12px;color:var(--ink-dim)">
         <b>quota.usedBaseline</b>係「已用」嘅起始底數（一般keep 0就得）；實際「已用」會自動 = usedBaseline + 呢個月曆入面status為delivered嘅同類型posts數量（draft唔計），唔使自己計。<br>
         <b>posts</b>係貼文交付日曆嘅紀錄，type要係 static/carousel/reels 其中一個；hours係淨係admin睇到嘅工時記錄；status係 delivered（已發佈）或 draft（草稿，唔計quota、客戶頁面唔顯示，用嚟預先佔位下個月嘅計劃）。<br>
+        <b>adsets.changeLog</b>係「投放調整紀錄」，喺admin後台手動編輯廣告組合嘅目標受眾時會自動記低（客戶都睇到），一般唔使自己喺JSON度寫，keep空array就得。<br>
         <b>objective</b>可以係：Awareness（觸及/知名度）、Traffic（流量）、Engagement（互動）、Leads（潛在客戶）、Sales（轉換/銷售）、AppPromotion（應用程式推廣）。<br>
         <b>results</b>視乎objective：Traffic=連結點擊、Engagement=互動次數、Leads=名單數、Sales=轉換次數、AppPromotion=安裝次數；Awareness唔使填，會自動用返reach計。
       </p>
@@ -1095,6 +1150,7 @@ function renderSyncTab(){
           endDate: as.endDate || '',
           budgetHKD: +as.budgetHKD || 0,
           targeting: as.targeting || emptyTargeting(),
+          changeLog: Array.isArray(as.changeLog) ? as.changeLog : [],
           ads: (as.ads||[]).map(a => ({
             id: a.id || uid(),
             name: a.name || '未命名廣告',

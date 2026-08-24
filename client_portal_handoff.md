@@ -132,6 +132,16 @@ window.storage> }`.
 > appears in both months. Ad sets with neither date set show in an
 > always-visible "未定日期" (undated) section in admin only — the public
 > view only ever shows dated ad sets.
+>
+> Ad sets also carry `changeLog`: editing an ad set's targeting fields in
+> admin auto-diffs old vs new values and appends a dated entry (age/
+> gender/location/placement get a simple from→to; `interests` gets a
+> token-level added/removed diff, split on `,`/`，`/`、`). No entry is
+> added on the ad set's first save (nothing to diff against yet) or when
+> a save doesn't actually change any targeting field. Shown to both admin
+> and the public client view — this is the one thing besides ad
+> performance itself that's visible to clients by design, so they can see
+> what was optimized and when.
 
 ```
 clients-index        -> [{ id, name }, ...]
@@ -161,6 +171,9 @@ client:<clientId>    -> {
                                         // BudgetExhausted) is computed, not stored
           budgetHKD,
           targeting: { age, gender, location, placement, interests },
+          changeLog: [
+            { id, date, changes: [{ field, label, from, to }] }   // or { field:"interests", label, added:[], removed:[] }
+          ],
           ads: [
             {
               id, name,
