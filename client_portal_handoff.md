@@ -196,20 +196,29 @@ window.storage> }`.
 > `renderClientView`, since the two views render identical markup for
 > this. Everything starts expanded (matches the pre-collapse layout).
 >
-> Added a `Messages` objective (訊息 / 對話 → 對話開始次數 /
-> 每次對話開始成本, i.e. Meta's "cost per conversation started") to the
-> `OBJECTIVES` map, alongside Awareness/Traffic/Engagement/Leads/Sales/
-> AppPromotion — for Meta campaigns whose destination is Messenger/
-> WhatsApp/Instagram DM (an OUTCOME_ENGAGEMENT campaign optimized for
-> conversations, distinct from the generic Engagement objective). The
-> MCP server's `sync_campaigns` tool schema (`mcp-server/app/api/mcp/route.ts`)
-> and `CampaignInput['objective']` type (`mcp-server/lib/sync.ts`) were
-> updated to accept it too, so Claude can map a Messages-objective Meta
-> campaign correctly when syncing ad data in. Existing campaigns already
-> saved under a different objective (e.g. mapped to Leads before this
-> option existed) need their objective corrected manually via admin's
-> campaign edit form, or by re-running `sync_campaigns` with the right
-> objective — this migration is not automatic.
+> Ad sets on a `Leads`-objective campaign carry an ad-set-level
+> `resultType`: `"form"` (default, 名單數 / 每個名單成本) or `"messages"`
+> (對話開始次數 / 每次對話開始成本, i.e. Meta's "cost per conversation
+> started"). This matches Meta's own model — Leads is a single ODAX
+> objective (`OUTCOME_LEADS`) whose ad sets can collect leads either via
+> an Instant Form/website lead event, or via a Messenger/WhatsApp/IG DM
+> conversation; it is NOT a separate objective the way Awareness/
+> Traffic/Engagement/Sales/AppPromotion are, so there is no standalone
+> "Messages" entry in `OBJECTIVES` (an earlier version of this doc/build
+> briefly added one — that was wrong and has been reverted). `getResultMeta(objective, resultType)`
+> resolves the correct resultLabel/costLabel pair and is used by
+> `adMetrics()` in place of reading straight off `OBJECTIVES[objective]`.
+> Admin's ad-set edit form shows a "名單收集方式" dropdown only when the
+> parent campaign's objective is Leads. The MCP server's `sync_campaigns`
+> tool (`mcp-server/app/api/mcp/route.ts`, `adsetSchema.resultType`) and
+> `AdSetInput['resultType']` (`mcp-server/lib/sync.ts`) accept the same
+> field, merged in place like the rest of an ad set's fields. Ad sets
+> saved before this field existed have no `resultType` and default to
+> `"form"` behavior (unchanged from before), so nothing needs backfilling
+> — but a Leads ad set that's actually Messenger-based (like it was
+> mis-tagged before this fix) still needs its 名單收集方式 corrected
+> manually via admin's ad-set edit form, or by re-syncing with
+> `resultType: "messages"`.
 
 ```
 clients-index        -> [{ id, name }, ...]
@@ -230,7 +239,7 @@ client:<clientId>    -> {
   campaigns: [
     {
       id, name,
-      objective: "Awareness" | "Traffic" | "Engagement" | "Leads" | "Messages" | "Sales" | "AppPromotion",
+      objective: "Awareness" | "Traffic" | "Engagement" | "Leads" | "Sales" | "AppPromotion",
       notes,
       adsets: [
         {
@@ -239,6 +248,8 @@ client:<clientId>    -> {
                                         // BudgetExhausted) is computed, not stored
           budgetHKD,
           targeting: { age, gender, location, placement, interests },
+          resultType,                  // only meaningful when campaign.objective is "Leads":
+                                        // "form" (default) | "messages" -- see below
           changeLog: [
             { id, date, changes: [{ field, label, from, to }] }   // or { field:"interests", label, added:[], removed:[] }
           ],

@@ -170,10 +170,21 @@ const OBJECTIVES = {
   Traffic:      { label:'流量',         resultLabel:'連結點擊',   costLabel:'CPC（每次點擊成本）' },
   Engagement:   { label:'互動',         resultLabel:'互動次數',   costLabel:'每次互動成本' },
   Leads:        { label:'潛在客戶',      resultLabel:'名單數',    costLabel:'每個名單成本' },
-  Messages:     { label:'訊息 / 對話',   resultLabel:'對話開始次數', costLabel:'每次對話開始成本' },
   Sales:        { label:'轉換 / 銷售',   resultLabel:'轉換次數',   costLabel:'每次轉換成本' },
   AppPromotion: { label:'應用程式推廣',   resultLabel:'安裝次數',   costLabel:'每次安裝成本' }
 };
+// Leads campaigns can collect leads via an Instant Form OR via a Messenger/WhatsApp/IG
+// conversation -- both are the same "Leads" objective in Meta's own model, just a
+// different result metric depending on the ad set's conversion destination.
+const LEADS_RESULT_TYPES = {
+  form:     { resultLabel:'名單數',      costLabel:'每個名單成本' },
+  messages: { resultLabel:'對話開始次數', costLabel:'每次對話開始成本' }
+};
+function getResultMeta(objective, resultType){
+  if(objective === 'Leads' && resultType === 'messages') return LEADS_RESULT_TYPES.messages;
+  const obj = OBJECTIVES[objective] || OBJECTIVES.Traffic;
+  return { resultLabel: obj.resultLabel, costLabel: obj.costLabel };
+}
 const OBJECTIVE_KEYS = Object.keys(OBJECTIVES);
 let clients = [];
 let currentId = null;
@@ -404,7 +415,6 @@ function collapseBtn(kind, id, collapsed){
   return `<button class="collapse-btn" data-toggle-${kind}="${id}" aria-label="展開/收合" aria-expanded="${!collapsed}">${collapsed ? '▸' : '▾'}</button>`;
 }
 function renderAdSetInner(c, as, isAdmin){
-  const obj = OBJECTIVES[c.objective] || OBJECTIVES.Traffic;
   const status = computeAdSetStatus(as);
   const tg = as.targeting || {};
   const ads = as.ads || [];
@@ -417,7 +427,7 @@ function renderAdSetInner(c, as, isAdmin){
   ].filter(Boolean).join('');
   const interestChips = splitInterests(tg.interests).map(x=>`<span class="chip dim">${escapeHtml(x)}</span>`).join('');
   const adCards = ads.map(a=>{
-    const m = adMetrics(a, c.objective);
+    const m = adMetrics(a, c.objective, as.resultType);
     const adCollapsed = collapsedAds.has(a.id);
     const editRow = isAdmin ? `<div class="row-actions">
         <button class="small" data-editad="${c.id}|${as.id}|${a.id}">編輯</button>
@@ -432,7 +442,7 @@ function renderAdSetInner(c, as, isAdmin){
         ${editRow}
       </div>
       ${adCollapsed ? '' : `
-      <div class="ad-stat-hero"><span class="num">${m.costPerResult}</span><span class="lbl">${obj.costLabel}</span></div>
+      <div class="ad-stat-hero"><span class="num">${m.costPerResult}</span><span class="lbl">${m.costLabel}</span></div>
       <div class="ad-stat-grid">${adStatGridCells(a, m, c.objective)}</div>`}
     </div>`;
   }).join('');
@@ -498,10 +508,10 @@ function statusPillClass(s){
   if(s==='BudgetExhausted') return 'status-budget';
   return 'status-ended';
 }
-function adMetrics(ad, objective){
+function adMetrics(ad, objective, resultType){
   const spend = +ad.spendHKD||0, reach = +ad.reach||0, clicks = +ad.clicks||0;
   const ctr = (clicks && reach) ? ((clicks/reach)*100).toFixed(2)+'%' : '—';
-  const obj = OBJECTIVES[objective] || OBJECTIVES.Traffic;
+  const meta = getResultMeta(objective, resultType);
   let resultValue, costPerResult;
   if(objective === 'Awareness'){
     resultValue = reach;
@@ -510,7 +520,7 @@ function adMetrics(ad, objective){
     resultValue = +ad.results||0;
     costPerResult = resultValue ? 'HK$' + (spend/resultValue).toFixed(2) : '—';
   }
-  return { ctr, resultValue, costPerResult, resultLabel: obj.resultLabel, costLabel: obj.costLabel };
+  return { ctr, resultValue, costPerResult, resultLabel: meta.resultLabel, costLabel: meta.costLabel };
 }
 function adStatGridCells(a, m, objective){
   const spend = `<div>花費<b>HK$${(+a.spendHKD||0).toLocaleString()}</b></div>`;
@@ -1061,10 +1071,11 @@ function showAdSetForm(campId, adsetId){
   const camp = currentData.campaigns.find(c=>c.id===campId);
   camp.adsets = camp.adsets || [];
   const as = adsetId ? camp.adsets.find(x=>x.id===adsetId) : {
-    id: uid(), name:'', startDate:'', endDate:'', budgetHKD:0, targeting: emptyTargeting(), ads: []
+    id: uid(), name:'', startDate:'', endDate:'', budgetHKD:0, targeting: emptyTargeting(), resultType:'form', ads: []
   };
   if(!as.targeting) as.targeting = emptyTargeting();
   const tg = as.targeting;
+  const isLeads = camp.objective === 'Leads';
   const holder = document.getElementById('adFormHolder');
   holder.innerHTML = `
     <div class="panel">
@@ -1075,6 +1086,14 @@ function showAdSetForm(campId, adsetId){
         <div><label>結束日期</label><input type="date" id="f_as_end" value="${as.endDate||''}"></div>
         <div><label>預算 (HK$)</label><input type="number" id="f_as_budget" value="${as.budgetHKD||0}"></div>
       </div>
+      ${isLeads ? `<div class="field-row">
+        <div><label>名單收集方式</label>
+          <select id="f_as_resulttype">
+            <option value="form" ${as.resultType!=='messages'?'selected':''}>表單名單（名單數 / 每個名單成本）</option>
+            <option value="messages" ${as.resultType==='messages'?'selected':''}>Messenger對話（對話開始次數 / 每次對話開始成本）</option>
+          </select>
+        </div>
+      </div>` : ''}
       <div class="section-label">目標受眾設定</div>
       <div class="field-row">
         <div><label>年齡層</label><input id="f_as_age" placeholder="例：25-45歲" value="${escapeHtml(tg.age)}"></div>
@@ -1102,6 +1121,7 @@ function showAdSetForm(campId, adsetId){
     as.startDate = document.getElementById('f_as_start').value;
     as.endDate = document.getElementById('f_as_end').value;
     as.budgetHKD = +document.getElementById('f_as_budget').value || 0;
+    if(isLeads) as.resultType = document.getElementById('f_as_resulttype').value;
     as.ads = as.ads || [];
     const newTargeting = {
       age: document.getElementById('f_as_age').value,
