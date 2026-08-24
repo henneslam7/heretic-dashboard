@@ -151,13 +151,35 @@ window.storage> }`.
 > `campaign.notes` no longer renders inside every ad set card (it used to
 > repeat once per ad set, which double- or triple-printed the same text
 > when a campaign had multiple ad sets active in one month). It now
-> renders once per campaign as a separate "insight card" — split into a
-> 成效總結 (summary) section and, if the text contains a "(1) ... (2) ..."
-> numbered list, a 💡 下次投放建議 (recommendations) section with each item
-> circled-numbered — shown above that campaign's ad set card(s) the first
-> time it appears in a given render (admin's month view + undated
-> section, and the public view, each track this independently so it's
-> never duplicated within either).
+> renders once per campaign as a "performance insight" section — split
+> into a 成效總結 (summary) part and, if the text contains a "(1) ... (2)
+> ..." numbered list, a 💡 下次投放建議 (recommendations) part with each
+> item circled-numbered.
+>
+> All of a campaign's ad sets (for a given month, or the undated section)
+> now render inside one shared `.campaign-group` card — campaign name +
+> objective pill + performance insight at the top, then each ad set as an
+> `.adset-block` separated by a divider — instead of the campaign insight
+> and each ad set being separate bordered boxes stacked on top of each
+> other. `renderAdSetBlock`/`renderPublicAdSetBlock` were merged into one
+> `renderAdSetInner(c, as, isAdmin)` (grouping is computed once via
+> `groupAndSortPairs`, shared by admin's month view, admin's undated
+> section, and the public view, so the insight naturally renders once per
+> group with no separate dedup tracking needed).
+>
+> Ad-level stat cards show an objective-appropriate result count next to
+> spend/clicks/CTR: Awareness keeps 觸及 (reach, since its CPM hero is
+> derived from reach); every other objective shows the campaign's actual
+> `obj.resultLabel` count (名單數 for Leads, 轉換次數 for Sales, 互動次數
+> for Engagement, 安裝次數 for AppPromotion, 連結點擊 for Traffic) instead
+> of reach, so the number backing the cost-per-result hero (CPL, CPA,
+> cost-per-engagement, CPI, CPC) is always visible alongside it.
+>
+> Within a month (or the undated section), campaign groups are ordered
+> active campaigns first (any ad set currently `Launched`), then
+> inactive, and within each bucket by earliest ad set start date —
+> instead of plain array order — so what's currently running surfaces
+> first for both admin and clients.
 
 ```
 clients-index        -> [{ id, name }, ...]
