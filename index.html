@@ -118,6 +118,10 @@
   .adset-block:first-of-type{margin-top:12px;padding-top:12px;}
   .adset-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;}
   .adset-name{font-size:13.5px;font-weight:600;color:var(--ink-dim);}
+  .collapse-row{display:flex;align-items:center;gap:6px;}
+  .collapse-btn{background:none;border:none;color:var(--ink-dim);cursor:pointer;font-size:13px;padding:2px 4px;line-height:1;flex-shrink:0;}
+  .collapse-btn:hover{color:var(--ink);}
+  .ad-stat-name-row .collapse-row{align-items:flex-start;}
   .meta-row{display:flex;gap:18px;flex-wrap:wrap;margin:10px 0 14px;font-size:12.5px;color:var(--ink-dim);}
   .meta-row span b{color:var(--ink);font-weight:600;}
   .section-h{font-size:11.5px;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin:14px 0 8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
@@ -175,6 +179,10 @@ let currentId = null;
 let currentData = null;
 let calYear = null, calMonth = null; // calMonth is 0-indexed (Date convention)
 let adsYear = null, adsMonth = null; // separate month cursor for the Ads tab's month grouping
+// collapse/expand UI state for the ads tab (admin + public), keyed by id, survives re-renders but not page reloads
+const collapsedCampaigns = new Set();
+const collapsedAdsets = new Set();
+const collapsedAds = new Set();
 
 const params = new URLSearchParams(location.search);
 const isClientView = params.get('view') === 'client';
@@ -391,11 +399,15 @@ function adsetInMonth(adset, year, month){
   return monthsSpanned(adset.startDate, adset.endDate).includes(year+'-'+month);
 }
 
+function collapseBtn(kind, id, collapsed){
+  return `<button class="collapse-btn" data-toggle-${kind}="${id}" aria-label="展開/收合" aria-expanded="${!collapsed}">${collapsed ? '▸' : '▾'}</button>`;
+}
 function renderAdSetInner(c, as, isAdmin){
   const obj = OBJECTIVES[c.objective] || OBJECTIVES.Traffic;
   const status = computeAdSetStatus(as);
   const tg = as.targeting || {};
   const ads = as.ads || [];
+  const collapsed = collapsedAdsets.has(as.id);
   const chips = [
     tg.age ? `<span class="chip">👤 ${escapeHtml(tg.age)}</span>` : '',
     tg.gender ? `<span class="chip">${escapeHtml(tg.gender)}</span>` : '',
@@ -405,17 +417,22 @@ function renderAdSetInner(c, as, isAdmin){
   const interestChips = splitInterests(tg.interests).map(x=>`<span class="chip dim">${escapeHtml(x)}</span>`).join('');
   const adCards = ads.map(a=>{
     const m = adMetrics(a, c.objective);
+    const adCollapsed = collapsedAds.has(a.id);
     const editRow = isAdmin ? `<div class="row-actions">
         <button class="small" data-editad="${c.id}|${as.id}|${a.id}">編輯</button>
         <button class="small danger" data-delad="${c.id}|${as.id}|${a.id}">刪除</button>
       </div>` : '';
     return `<div class="ad-stat-card">
       <div class="ad-stat-name-row">
-        <div class="ad-stat-name">${escapeHtml(a.name)}</div>
+        <div class="collapse-row">
+          ${collapseBtn('ad', a.id, adCollapsed)}
+          <div class="ad-stat-name">${escapeHtml(a.name)}</div>
+        </div>
         ${editRow}
       </div>
+      ${adCollapsed ? '' : `
       <div class="ad-stat-hero"><span class="num">${m.costPerResult}</span><span class="lbl">${obj.costLabel}</span></div>
-      <div class="ad-stat-grid">${adStatGridCells(a, m, c.objective)}</div>
+      <div class="ad-stat-grid">${adStatGridCells(a, m, c.objective)}</div>`}
     </div>`;
   }).join('');
   const adminBtns = isAdmin ? `<div class="row-actions" style="margin-top:8px">
@@ -423,11 +440,7 @@ function renderAdSetInner(c, as, isAdmin){
       <button class="small" data-editadset="${c.id}|${as.id}">編輯組合</button>
       <button class="small danger" data-deladset="${c.id}|${as.id}">刪除組合</button>
     </div>` : '';
-  return `<div class="adset-block">
-    <div class="adset-head">
-      <div class="adset-name">${escapeHtml(as.name)}</div>
-      <span class="status-pill ${statusPillClass(status)}">${STATUS_LABEL[status]}</span>
-    </div>
+  const body = collapsed ? '' : `
     ${adminBtns}
     <div class="meta-row">
       <span>📅 投放期間：<b>${as.startDate||'—'} → ${as.endDate||'—'}</b></span>
@@ -439,20 +452,33 @@ function renderAdSetInner(c, as, isAdmin){
     <div class="section-h">📊 廣告成效</div>
     ${ads.length ? adCards : '<div class="empty" style="padding:8px">未有廣告。</div>'}
     ${renderChangeLog(as.changeLog, isAdmin, c.id, as.id)}
+  `;
+  return `<div class="adset-block">
+    <div class="adset-head">
+      <div class="collapse-row">
+        ${collapseBtn('adset', as.id, collapsed)}
+        <div class="adset-name">${escapeHtml(as.name)}</div>
+      </div>
+      <span class="status-pill ${statusPillClass(status)}">${STATUS_LABEL[status]}</span>
+    </div>
+    ${body}
   </div>`;
 }
 function renderCampaignGroup(group, isAdmin){
   const c = group.c;
   const obj = OBJECTIVES[c.objective] || OBJECTIVES.Traffic;
+  const collapsed = collapsedCampaigns.has(c.id);
   const insightBody = renderCampaignInsightBody(c);
   const adsetBlocks = group.adsets.map(as => renderAdSetInner(c, as, isAdmin)).join('');
   return `<div class="campaign-group">
     <div class="campaign-group-head">
-      <div class="campaign-group-name">${escapeHtml(c.name)}</div>
+      <div class="collapse-row">
+        ${collapseBtn('campaign', c.id, collapsed)}
+        <div class="campaign-group-name">${escapeHtml(c.name)}</div>
+      </div>
       <span class="obj-pill">${obj.label}</span>
     </div>
-    ${insightBody}
-    ${adsetBlocks}
+    ${collapsed ? '' : `${insightBody}${adsetBlocks}`}
   </div>`;
 }
 
@@ -584,6 +610,7 @@ async function renderClientView(){
   document.getElementById('calNextBtn').addEventListener('click', () => { calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderClientView(); });
   document.getElementById('adsPrevBtn').addEventListener('click', () => { adsMonth--; if(adsMonth<0){adsMonth=11;adsYear--;} renderClientView(); });
   document.getElementById('adsNextBtn').addEventListener('click', () => { adsMonth++; if(adsMonth>11){adsMonth=0;adsYear++;} renderClientView(); });
+  bindCollapseToggles(root, renderClientView);
 }
 
 /* ================= ADMIN VIEW ================= */
@@ -912,7 +939,30 @@ function renderCampaignStrip(campaigns){
   }).join('');
 }
 
+/* ---------- collapse/expand toggles for campaign/adset/ad cards (shared by admin + public view) ---------- */
+function bindCollapseToggles(el, rerender){
+  el.querySelectorAll('[data-toggle-campaign]').forEach(b => b.addEventListener('click', e => {
+    e.stopPropagation();
+    const id = b.dataset.toggleCampaign;
+    if(collapsedCampaigns.has(id)) collapsedCampaigns.delete(id); else collapsedCampaigns.add(id);
+    rerender();
+  }));
+  el.querySelectorAll('[data-toggle-adset]').forEach(b => b.addEventListener('click', e => {
+    e.stopPropagation();
+    const id = b.dataset.toggleAdset;
+    if(collapsedAdsets.has(id)) collapsedAdsets.delete(id); else collapsedAdsets.add(id);
+    rerender();
+  }));
+  el.querySelectorAll('[data-toggle-ad]').forEach(b => b.addEventListener('click', e => {
+    e.stopPropagation();
+    const id = b.dataset.toggleAd;
+    if(collapsedAds.has(id)) collapsedAds.delete(id); else collapsedAds.add(id);
+    rerender();
+  }));
+}
+
 function wireAdsTabEvents(el){
+  bindCollapseToggles(el, renderAdsTab);
   el.querySelectorAll('[data-editcamp]').forEach(b => b.addEventListener('click', () => showCampaignForm(b.dataset.editcamp)));
   el.querySelectorAll('[data-delcamp]').forEach(b => b.addEventListener('click', async () => {
     if(!confirm('確定刪除呢個行銷活動？入面所有廣告組合同廣告都會一齊刪除。')) return;

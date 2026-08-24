@@ -180,6 +180,21 @@ window.storage> }`.
 > inactive, and within each bucket by earliest ad set start date —
 > instead of plain array order — so what's currently running surfaces
 > first for both admin and clients.
+>
+> Campaign / ad set / ad cards are each independently collapsible (▾/▸
+> chevron button next to the name) — collapsing a campaign hides its
+> insight and all its ad sets, collapsing an ad set hides its targeting
+> chips + ad cards + change log, collapsing an ad hides its cost-per-
+> result hero and stat grid (name and edit buttons, if admin, stay
+> visible so it can still be found/edited while collapsed). Collapse
+> state lives in three in-memory `Set`s (`collapsedCampaigns`,
+> `collapsedAdsets`, `collapsedAds`, keyed by id) that survive
+> re-renders within a session but reset on page reload — same lifetime
+> as the month cursor, not persisted to Firestore. A shared
+> `bindCollapseToggles(el, rerenderFn)` wires the toggle buttons; it's
+> called from both admin's `wireAdsTabEvents` and public's
+> `renderClientView`, since the two views render identical markup for
+> this. Everything starts expanded (matches the pre-collapse layout).
 
 ```
 clients-index        -> [{ id, name }, ...]
