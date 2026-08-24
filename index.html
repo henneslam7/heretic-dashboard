@@ -11,7 +11,7 @@
   .wrap{max-width:960px;margin:0 auto;padding:20px 16px 60px;}
   h1{font-size:20px;font-weight:700;letter-spacing:-0.01em;margin:0 0 2px;}
   .sub{color:var(--ink-dim);font-size:13px;margin:0 0 20px;}
-  .brand-logo{display:inline-block;height:64px;width:auto;margin:4px 0 14px;}
+  .brand-logo{display:inline-block;height:96px;width:auto;margin:4px 0 14px;}
   .toprow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px;}
   select, input, textarea, button{
     font-family:inherit;background:var(--panel2);color:var(--ink);
@@ -95,6 +95,16 @@
   .cal-dot.static{background:var(--accent);}
   .cal-dot.carousel{background:#f2c866;}
   .cal-dot.reels{background:#c99af2;}
+  .cal-post-draft{border:1px dashed var(--ink-dim);background:transparent!important;color:var(--ink-dim)!important;}
+  .admin-only-note{font-size:11px;color:var(--ink-dim);margin:2px 0 10px;}
+  .hours-summary{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;}
+  .hours-stat{font-size:12.5px;color:var(--ink-dim);}
+  .hours-stat b{color:var(--ink);font-weight:700;}
+  .noundated-block{margin-top:12px;}
+  .campaign-strip-row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid var(--line);}
+  .campaign-strip-row:last-child{border-bottom:none;}
+  .campaign-label{font-size:11.5px;color:var(--ink-dim);margin-bottom:8px;}
+  .adset-block-top{margin-top:10px;}
   @media(max-width:640px){
     .cal-day{min-height:46px;padding:2px 2px 18px;}
     .cal-post{font-size:9px;padding:1px 3px;}
@@ -128,6 +138,7 @@ let clients = [];
 let currentId = null;
 let currentData = null;
 let calYear = null, calMonth = null; // calMonth is 0-indexed (Date convention)
+let adsYear = null, adsMonth = null; // separate month cursor for the Ads tab's month grouping
 
 const params = new URLSearchParams(location.search);
 const isClientView = params.get('view') === 'client';
@@ -202,10 +213,19 @@ function migrateClientData(data){
 }
 
 /* ---------- post calendar (shared by admin + public view) ---------- */
+function isDraftPost(p){ return p.status === 'draft'; }
 function computeUsed(data, type){
   const baseline = +(data.quota?.[type]?.usedBaseline) || 0;
-  const logged = (data.posts||[]).filter(p => p.type === type).length;
+  const logged = (data.posts||[]).filter(p => p.type === type && !isDraftPost(p)).length;
   return baseline + logged;
+}
+function computeMonthlyHours(posts, year, month){
+  const prefix = `${year}-${String(month+1).padStart(2,'0')}`;
+  const totals = { static:0, carousel:0, reels:0 };
+  (posts||[]).forEach(p => {
+    if(p.date && p.date.startsWith(prefix) && totals[p.type] !== undefined) totals[p.type] += +p.hours || 0;
+  });
+  return totals;
 }
 
 const WEEKDAY_LABEL = ['日','一','二','三','四','五','六'];
@@ -221,7 +241,7 @@ function renderCalendarGrid(posts, year, month, editable){
     const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const dayPosts = postsByDate[dateStr] || [];
     const pills = dayPosts.map(p =>
-      `<div class="cal-post ${p.type}"${editable ? ` data-editpost="${p.id}"` : ''} title="${escapeHtml(p.title)}">${escapeHtml(p.title)}</div>`
+      `<div class="cal-post ${p.type}${isDraftPost(p) ? ' cal-post-draft' : ''}"${editable ? ` data-editpost="${p.id}"` : ''} title="${escapeHtml(p.title)}${isDraftPost(p) ? '（草稿）' : ''}">${isDraftPost(p) ? '📝 ' : ''}${escapeHtml(p.title)}</div>`
     ).join('');
     const addBtn = editable ? `<button class="cal-add" data-adddate="${dateStr}" title="加貼文紀錄">＋</button>` : '';
     cells.push(`<div class="cal-day"><div class="cal-daynum">${d}</div>${pills}${addBtn}</div>`);
@@ -230,6 +250,63 @@ function renderCalendarGrid(posts, year, month, editable){
     <div class="cal-grid cal-weekdays">${WEEKDAY_LABEL.map(w=>`<div class="cal-weekday">${w}</div>`).join('')}</div>
     <div class="cal-grid">${cells.join('')}</div>
   `;
+}
+
+/* ---------- month-grouping helper (shared by ads tab admin + public view) ---------- */
+function monthsSpanned(startDate, endDate){
+  if(!startDate && !endDate) return [];
+  const start = startDate ? new Date(startDate+'T00:00:00') : new Date(endDate+'T00:00:00');
+  const end = endDate ? new Date(endDate+'T00:00:00') : start;
+  const months = [];
+  let y = start.getFullYear(), m = start.getMonth();
+  const endY = end.getFullYear(), endM = end.getMonth();
+  let guard = 0;
+  while((y < endY || (y===endY && m<=endM)) && guard < 120){
+    months.push(y+'-'+m);
+    m++; if(m>11){ m=0; y++; }
+    guard++;
+  }
+  return months;
+}
+function adsetInMonth(adset, year, month){
+  return monthsSpanned(adset.startDate, adset.endDate).includes(year+'-'+month);
+}
+
+function renderPublicAdSetBlock(c, as){
+  const obj = OBJECTIVES[c.objective] || OBJECTIVES.Traffic;
+  const status = computeAdSetStatus(as);
+  const tg = as.targeting || {};
+  const ads = as.ads || [];
+  const adRows = ads.map(a=>{
+    const m = adMetrics(a, c.objective);
+    return `<tr>
+      <td>${escapeHtml(a.name)}</td>
+      <td>HK$${(+a.spendHKD||0).toLocaleString()}</td>
+      <td>${(+a.reach||0).toLocaleString()}</td>
+      <td>${(+a.clicks||0).toLocaleString()}</td>
+      <td>${m.ctr}</td>
+      <td>${m.resultValue.toLocaleString()}</td>
+      <td>${m.costPerResult}</td>
+    </tr>`;
+  }).join('');
+  return `<div class="client-card">
+    <div class="campaign-label">${escapeHtml(c.name)} · <span class="obj-pill">${obj.label}</span></div>
+    <h3>${escapeHtml(as.name)} <span class="status-pill ${statusPillClass(status)}">${STATUS_LABEL[status]}</span></h3>
+    ${c.notes ? `<div style="font-size:12.5px;color:var(--ink-dim);margin:6px 0">${escapeHtml(c.notes)}</div>` : ''}
+    <div class="kv">
+      <div>投放期間：<b>${as.startDate||'—'} → ${as.endDate||'—'}</b></div>
+      <div>預算：<b>HK$${(+as.budgetHKD||0).toLocaleString()}</b></div>
+      <div>年齡層：<b>${escapeHtml(tg.age)||'—'}</b></div>
+      <div>性別：<b>${escapeHtml(tg.gender)||'—'}</b></div>
+      <div>地區：<b>${escapeHtml(tg.location)||'—'}</b></div>
+      <div>版位：<b>${escapeHtml(tg.placement)||'—'}</b></div>
+      <div style="grid-column:1/-1">興趣 / 受眾特徵：<b>${escapeHtml(tg.interests)||'—'}</b></div>
+    </div>
+    ${ads.length ? `<div class="tablewrap"><table style="margin-top:8px">
+      <tr><th>廣告名稱</th><th>花費</th><th>觸及</th><th>點擊</th><th>CTR</th><th>${obj.resultLabel}</th><th>${obj.costLabel}</th></tr>
+      ${adRows}
+    </table></div>` : '<div class="empty" style="padding:8px">未有廣告。</div>'}
+  </div>`;
 }
 
 /* ---------- ad set status / ad metrics (shared by admin + public view) ---------- */
@@ -308,51 +385,13 @@ async function renderClientView(){
   if(calYear === null){ const now = new Date(); calYear = now.getFullYear(); calMonth = now.getMonth(); }
 
   const campaigns = data.campaigns || [];
-  const campaignCards = campaigns.length ? campaigns.map(c=>{
-    const obj = OBJECTIVES[c.objective] || OBJECTIVES.Traffic;
-    const adsets = c.adsets || [];
-    const adsetBlocks = adsets.length ? adsets.map(as=>{
-      const status = computeAdSetStatus(as);
-      const tg = as.targeting || {};
-      const ads = as.ads || [];
-      const adRows = ads.map(a=>{
-        const m = adMetrics(a, c.objective);
-        return `<tr>
-          <td>${escapeHtml(a.name)}</td>
-          <td>HK$${(+a.spendHKD||0).toLocaleString()}</td>
-          <td>${(+a.reach||0).toLocaleString()}</td>
-          <td>${(+a.clicks||0).toLocaleString()}</td>
-          <td>${m.ctr}</td>
-          <td>${m.resultValue.toLocaleString()}</td>
-          <td>${m.costPerResult}</td>
-        </tr>`;
-      }).join('');
-      return `<div class="adset-block">
-        <div class="adset-head">
-          <b>${escapeHtml(as.name)}</b>
-          <span class="status-pill ${statusPillClass(status)}">${STATUS_LABEL[status]}</span>
-        </div>
-        <div class="kv">
-          <div>投放期間：<b>${as.startDate||'—'} → ${as.endDate||'—'}</b></div>
-          <div>預算：<b>HK$${(+as.budgetHKD||0).toLocaleString()}</b></div>
-          <div>年齡層：<b>${escapeHtml(tg.age)||'—'}</b></div>
-          <div>性別：<b>${escapeHtml(tg.gender)||'—'}</b></div>
-          <div>地區：<b>${escapeHtml(tg.location)||'—'}</b></div>
-          <div>版位：<b>${escapeHtml(tg.placement)||'—'}</b></div>
-          <div style="grid-column:1/-1">興趣 / 受眾特徵：<b>${escapeHtml(tg.interests)||'—'}</b></div>
-        </div>
-        ${ads.length ? `<div class="tablewrap"><table style="margin-top:8px">
-          <tr><th>廣告名稱</th><th>花費</th><th>觸及</th><th>點擊</th><th>CTR</th><th>${obj.resultLabel}</th><th>${obj.costLabel}</th></tr>
-          ${adRows}
-        </table></div>` : '<div class="empty" style="padding:8px">未有廣告。</div>'}
-      </div>`;
-    }).join('') : '<div class="empty" style="padding:8px">未有廣告組合。</div>';
-    return `<div class="client-card">
-      <h3>${escapeHtml(c.name)} <span class="obj-pill">${obj.label}</span></h3>
-      ${c.notes ? `<div style="font-size:12.5px;color:var(--ink-dim);margin:6px 0">${escapeHtml(c.notes)}</div>` : ''}
-      ${adsetBlocks}
-    </div>`;
-  }).join('') : '<div class="empty">暫時未有廣告投放記錄。</div>';
+  if(adsYear === null){ const now = new Date(); adsYear = now.getFullYear(); adsMonth = now.getMonth(); }
+  const allPairs = [];
+  campaigns.forEach(c => (c.adsets||[]).forEach(as => allPairs.push({ c, as })));
+  const thisMonthPairs = allPairs.filter(({as}) => adsetInMonth(as, adsYear, adsMonth));
+  const campaignCards = thisMonthPairs.length
+    ? thisMonthPairs.map(({c,as}) => renderPublicAdSetBlock(c, as)).join('')
+    : '<div class="empty">呢個月暫時未有廣告投放記錄。</div>';
 
   root.innerHTML = `
     <div class="wrap">
@@ -369,17 +408,23 @@ async function renderClientView(){
           <div class="cal-title">${calYear}年${calMonth+1}月</div>
           <button class="small" id="calNextBtn">›</button>
         </div>
-        ${renderCalendarGrid(data.posts, calYear, calMonth, false)}
+        ${renderCalendarGrid((data.posts||[]).filter(p => !isDraftPost(p)), calYear, calMonth, false)}
         <div class="cal-legend">
           ${TYPES.map(t=>`<span class="cal-legend-item"><span class="cal-dot ${t}"></span>${TYPE_LABEL[t]}</span>`).join('')}
         </div>
       </div>
-      <div class="section-label">Meta 廣告投放</div>
+      <div class="cal-head">
+        <button class="small" id="adsPrevBtn">‹</button>
+        <div class="cal-title">${adsYear}年${adsMonth+1}月嘅Meta廣告投放</div>
+        <button class="small" id="adsNextBtn">›</button>
+      </div>
       ${campaignCards}
     </div>
   `;
   document.getElementById('calPrevBtn').addEventListener('click', () => { calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderClientView(); });
   document.getElementById('calNextBtn').addEventListener('click', () => { calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderClientView(); });
+  document.getElementById('adsPrevBtn').addEventListener('click', () => { adsMonth--; if(adsMonth<0){adsMonth=11;adsYear--;} renderClientView(); });
+  document.getElementById('adsNextBtn').addEventListener('click', () => { adsMonth++; if(adsMonth>11){adsMonth=0;adsYear++;} renderClientView(); });
 }
 
 /* ================= ADMIN VIEW ================= */
@@ -539,6 +584,8 @@ function renderQuotaTab(){
   }).join('');
 
   if(calYear === null){ const now = new Date(); calYear = now.getFullYear(); calMonth = now.getMonth(); }
+  const hoursTotals = computeMonthlyHours(currentData.posts, calYear, calMonth);
+  const hoursSum = TYPES.reduce((s,t)=>s+hoursTotals[t],0);
 
   el.innerHTML = `
     <div class="panel"><div class="grid3">${cards}</div></div>
@@ -548,10 +595,15 @@ function renderQuotaTab(){
         <div class="cal-title">${calYear}年${calMonth+1}月</div>
         <button class="small" id="calNextBtn">›</button>
       </div>
-      <p style="font-size:11.5px;color:var(--ink-dim);margin:6px 0 10px">貼文交付日曆：撳日格入面嘅「＋」加一條紀錄（標題＋類型），「已用」會自動計返出嚟。</p>
+      <p style="font-size:11.5px;color:var(--ink-dim);margin:6px 0 10px">貼文交付日曆：撳日格入面嘅「＋」加一條紀錄（標題＋類型），「已用」會自動計返出嚟。草稿（📝）唔算入已用quota，客戶都睇唔到。</p>
       ${renderCalendarGrid(currentData.posts, calYear, calMonth, true)}
       <div class="cal-legend">
         ${TYPES.map(t=>`<span class="cal-legend-item"><span class="cal-dot ${t}"></span>${TYPE_LABEL[t]}</span>`).join('')}
+      </div>
+      <div class="section-label">本月花咗嘅時數（淨係你自己睇到）</div>
+      <div class="hours-summary">
+        ${TYPES.map(t=>`<span class="hours-stat">${TYPE_LABEL[t]}：<b>${hoursTotals[t]}</b> 小時</span>`).join('')}
+        <span class="hours-stat">合計：<b>${hoursSum}</b> 小時</span>
       </div>
     </div>
     <div id="postFormHolder"></div>
@@ -579,7 +631,7 @@ function wireCalendarEvents(el){
 
 function showPostForm(dateStr, postId){
   currentData.posts = currentData.posts || [];
-  const post = postId ? currentData.posts.find(p=>p.id===postId) : { id: uid(), date: dateStr, type: 'static', title: '' };
+  const post = postId ? currentData.posts.find(p=>p.id===postId) : { id: uid(), date: dateStr, type: 'static', title: '', hours: 0, status: 'delivered' };
   const holder = document.getElementById('postFormHolder');
   holder.innerHTML = `
     <div class="panel">
@@ -591,11 +643,19 @@ function showPostForm(dateStr, postId){
             ${TYPES.map(t=>`<option value="${t}" ${post.type===t?'selected':''}>${TYPE_LABEL[t]}</option>`).join('')}
           </select>
         </div>
+        <div><label>花咗嘅時數</label><input type="number" min="0" step="0.5" id="f_post_hours" value="${post.hours||0}"></div>
+        <div><label>狀態</label>
+          <select id="f_post_status">
+            <option value="delivered" ${(post.status||'delivered')==='delivered'?'selected':''}>已發佈</option>
+            <option value="draft" ${post.status==='draft'?'selected':''}>草稿（未出街，客戶睇唔到）</option>
+          </select>
+        </div>
       </div>
       <div style="margin-bottom:8px">
         <label style="font-size:11px;color:var(--ink-dim)">標題</label>
         <input id="f_post_title" style="width:100%" placeholder="例：8月品牌故事輪播圖" value="${escapeHtml(post.title)}">
       </div>
+      <p class="admin-only-note">時數同狀態淨係你自己(admin)睇到；草稿狀態嘅貼文唔會計入「已用」quota，客戶公開頁面都唔會顯示。</p>
       <div class="footer-actions">
         <button class="primary" id="savePostBtn">儲存</button>
         <button id="cancelPostBtn">取消</button>
@@ -607,6 +667,8 @@ function showPostForm(dateStr, postId){
   document.getElementById('savePostBtn').addEventListener('click', async () => {
     post.date = document.getElementById('f_post_date').value || dateStr;
     post.type = document.getElementById('f_post_type').value;
+    post.hours = +document.getElementById('f_post_hours').value || 0;
+    post.status = document.getElementById('f_post_status').value;
     post.title = document.getElementById('f_post_title').value.trim() || '未命名貼文';
     const idx = currentData.posts.findIndex(p=>p.id===post.id);
     if(idx>=0) currentData.posts[idx]=post; else currentData.posts.push(post);
@@ -633,38 +695,60 @@ function renderAdsTab(){
     totalBudget += +as.budgetHKD||0;
     (as.ads||[]).forEach(a => totalSpend += +a.spendHKD||0);
   }));
+
+  if(adsYear === null){ const now = new Date(); adsYear = now.getFullYear(); adsMonth = now.getMonth(); }
+
+  // flatten (campaign, adset) pairs so we can group by month independently of campaign nesting
+  const allPairs = [];
+  campaigns.forEach(c => (c.adsets||[]).forEach(as => allPairs.push({ c, as })));
+  const thisMonthPairs = allPairs.filter(({as}) => adsetInMonth(as, adsYear, adsMonth));
+  const undatedPairs = allPairs.filter(({as}) => !as.startDate && !as.endDate);
+
   el.innerHTML = `
-    <div class="footer-actions" style="margin-bottom:12px;">
-      <button class="primary" id="addCampaignBtn">＋ 新增行銷活動 (Campaign)</button>
-      <span class="totals" style="align-self:center">總預算：HK$${totalBudget.toLocaleString()} · 總花費：HK$${totalSpend.toLocaleString()}</span>
+    <div class="panel">
+      <div class="footer-actions" style="margin-top:0;margin-bottom:10px;">
+        <button class="primary" id="addCampaignBtn">＋ 新增行銷活動 (Campaign)</button>
+        <span class="totals" style="align-self:center">總預算：HK$${totalBudget.toLocaleString()} · 總花費：HK$${totalSpend.toLocaleString()}</span>
+      </div>
+      ${campaigns.length ? renderCampaignStrip(campaigns) : '<div class="empty">未有廣告活動記錄。</div>'}
     </div>
-    ${campaigns.length ? campaigns.map(renderCampaignCard).join('') : '<div class="empty">未有廣告活動記錄。</div>'}
+
+    <div class="cal-head">
+      <button class="small" id="adsPrevBtn">‹</button>
+      <div class="cal-title">${adsYear}年${adsMonth+1}月嘅廣告投放</div>
+      <button class="small" id="adsNextBtn">›</button>
+    </div>
+    ${thisMonthPairs.length ? thisMonthPairs.map(({c,as}) => renderAdSetBlock(c, as)).join('') : '<div class="empty">呢個月冇廣告組合投放。</div>'}
+
+    ${undatedPairs.length ? `<div class="noundated-block">
+      <div class="section-label">未定日期嘅廣告組合</div>
+      ${undatedPairs.map(({c,as}) => renderAdSetBlock(c, as)).join('')}
+    </div>` : ''}
+
     <div id="adFormHolder"></div>
   `;
   document.getElementById('addCampaignBtn').addEventListener('click', () => showCampaignForm(null));
+  document.getElementById('adsPrevBtn').addEventListener('click', () => { adsMonth--; if(adsMonth<0){adsMonth=11;adsYear--;} renderAdsTab(); });
+  document.getElementById('adsNextBtn').addEventListener('click', () => { adsMonth++; if(adsMonth>11){adsMonth=0;adsYear++;} renderAdsTab(); });
   wireAdsTabEvents(el);
 }
 
-function renderCampaignCard(c){
-  const obj = OBJECTIVES[c.objective] || OBJECTIVES.Traffic;
-  const adsets = c.adsets || [];
-  return `<div class="panel campaign-card">
-    <div class="campaign-head">
+function renderCampaignStrip(campaigns){
+  return campaigns.map(c => {
+    const obj = OBJECTIVES[c.objective] || OBJECTIVES.Traffic;
+    return `<div class="campaign-strip-row">
       <div>
-        <h3>${escapeHtml(c.name)}</h3>
+        <b>${escapeHtml(c.name)}</b>
         <span class="obj-pill">${obj.label}</span>
+        ${c.notes ? `<div style="font-size:11.5px;color:var(--ink-dim);margin-top:2px">${escapeHtml(c.notes)}</div>` : ''}
       </div>
       <div class="row-actions">
-        <button class="small" data-editcamp="${c.id}">編輯活動</button>
-        <button class="small danger" data-delcamp="${c.id}">刪除活動</button>
+        <button class="small" data-addadset="${c.id}">＋ 廣告組合</button>
+        <button class="small" data-editcamp="${c.id}">編輯</button>
+        <button class="small danger" data-delcamp="${c.id}">刪除</button>
       </div>
-    </div>
-    ${c.notes ? `<div style="font-size:12px;color:var(--ink-dim);margin:6px 0">${escapeHtml(c.notes)}</div>` : ''}
-    <div class="footer-actions" style="margin:10px 0 0">
-      <button class="small" data-addadset="${c.id}">＋ 新增廣告組合 (Ad Set)</button>
-    </div>
-    ${adsets.length ? adsets.map(as => renderAdSetBlock(c, as)).join('') : '<div class="empty" style="padding:10px">未有廣告組合。</div>'}
-  </div>`;
+    </div>`;
+  }).join('');
 }
 
 function renderAdSetBlock(c, as){
@@ -689,7 +773,8 @@ function renderAdSetBlock(c, as){
       </td>
     </tr>`;
   }).join('');
-  return `<div class="adset-block">
+  return `<div class="panel adset-block-top">
+    <div class="campaign-label">${escapeHtml(c.name)} · <span class="obj-pill">${obj.label}</span></div>
     <div class="adset-head">
       <div><b>${escapeHtml(as.name)}</b> <span class="status-pill ${statusPillClass(status)}">${STATUS_LABEL[status]}</span></div>
       <div class="row-actions">
@@ -916,7 +1001,9 @@ function renderSyncTab(){
       "id": "如果係更新現有紀錄，保留原本id；新紀錄可以唔寫",
       "date": "2026-08-05",
       "type": "carousel",
-      "title": "8月品牌故事輪播圖"
+      "title": "8月品牌故事輪播圖",
+      "hours": 2.5,
+      "status": "delivered"
     }
   ],
   "campaigns": [
@@ -960,8 +1047,8 @@ function renderSyncTab(){
       <p style="font-size:13px;margin-top:0">請Claude幫手生成一段JSON（跟返下面格式），貼喺呢度，再撳「匯入」。匯入會<b>整份取代</b>目前客戶嘅名額同廣告資料，如唔肯定可以先匯出備份。</p>
       <div class="schema">${escapeHtml(schema)}</div>
       <p style="font-size:12px;color:var(--ink-dim)">
-        <b>quota.usedBaseline</b>係「已用」嘅起始底數（一般keep 0就得）；實際「已用」會自動 = usedBaseline + 呢個月曆入面同類型嘅posts數量，唔使自己計。<br>
-        <b>posts</b>係貼文交付日曆嘅紀錄，type要係 static/carousel/reels 其中一個。<br>
+        <b>quota.usedBaseline</b>係「已用」嘅起始底數（一般keep 0就得）；實際「已用」會自動 = usedBaseline + 呢個月曆入面status為delivered嘅同類型posts數量（draft唔計），唔使自己計。<br>
+        <b>posts</b>係貼文交付日曆嘅紀錄，type要係 static/carousel/reels 其中一個；hours係淨係admin睇到嘅工時記錄；status係 delivered（已發佈）或 draft（草稿，唔計quota、客戶頁面唔顯示，用嚟預先佔位下個月嘅計劃）。<br>
         <b>objective</b>可以係：Awareness（觸及/知名度）、Traffic（流量）、Engagement（互動）、Leads（潛在客戶）、Sales（轉換/銷售）、AppPromotion（應用程式推廣）。<br>
         <b>results</b>視乎objective：Traffic=連結點擊、Engagement=互動次數、Leads=名單數、Sales=轉換次數、AppPromotion=安裝次數；Awareness唔使填，會自動用返reach計。
       </p>
@@ -992,7 +1079,9 @@ function renderSyncTab(){
         id: p.id || uid(),
         date: p.date || '',
         type: TYPES.includes(p.type) ? p.type : 'static',
-        title: p.title || '未命名貼文'
+        title: p.title || '未命名貼文',
+        hours: +p.hours || 0,
+        status: p.status === 'draft' ? 'draft' : 'delivered'
       }));
       const campaigns = (parsed.campaigns||[]).map(c => ({
         id: c.id || uid(),
