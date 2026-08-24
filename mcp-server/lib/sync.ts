@@ -28,7 +28,7 @@ export type AdSetInput = {
 
 export type CampaignInput = {
   name: string;
-  objective?: 'Awareness' | 'Traffic' | 'Engagement' | 'Leads' | 'Sales' | 'AppPromotion';
+  objective?: 'Awareness' | 'Traffic' | 'Engagement' | 'Leads' | 'Messages' | 'Sales' | 'AppPromotion';
   notes?: string;
   adsets?: AdSetInput[];
 };

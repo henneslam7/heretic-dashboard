@@ -195,6 +195,21 @@ window.storage> }`.
 > called from both admin's `wireAdsTabEvents` and public's
 > `renderClientView`, since the two views render identical markup for
 > this. Everything starts expanded (matches the pre-collapse layout).
+>
+> Added a `Messages` objective (訊息 / 對話 → 對話開始次數 /
+> 每次對話開始成本, i.e. Meta's "cost per conversation started") to the
+> `OBJECTIVES` map, alongside Awareness/Traffic/Engagement/Leads/Sales/
+> AppPromotion — for Meta campaigns whose destination is Messenger/
+> WhatsApp/Instagram DM (an OUTCOME_ENGAGEMENT campaign optimized for
+> conversations, distinct from the generic Engagement objective). The
+> MCP server's `sync_campaigns` tool schema (`mcp-server/app/api/mcp/route.ts`)
+> and `CampaignInput['objective']` type (`mcp-server/lib/sync.ts`) were
+> updated to accept it too, so Claude can map a Messages-objective Meta
+> campaign correctly when syncing ad data in. Existing campaigns already
+> saved under a different objective (e.g. mapped to Leads before this
+> option existed) need their objective corrected manually via admin's
+> campaign edit form, or by re-running `sync_campaigns` with the right
+> objective — this migration is not automatic.
 
 ```
 clients-index        -> [{ id, name }, ...]
@@ -215,7 +230,7 @@ client:<clientId>    -> {
   campaigns: [
     {
       id, name,
-      objective: "Awareness" | "Traffic" | "Engagement" | "Leads" | "Sales" | "AppPromotion",
+      objective: "Awareness" | "Traffic" | "Engagement" | "Leads" | "Messages" | "Sales" | "AppPromotion",
       notes,
       adsets: [
         {
