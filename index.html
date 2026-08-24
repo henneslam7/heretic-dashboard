@@ -108,7 +108,9 @@
   .changelog{font-size:12px;color:var(--ink-dim);}
   .changelog-entry{padding:5px 0;border-bottom:1px solid var(--line);}
   .changelog-entry:last-child{border-bottom:none;}
-  .changelog-entry b{color:var(--ink);display:block;margin-bottom:2px;font-size:11.5px;}
+  .changelog-entry b{color:var(--ink);font-size:11.5px;}
+  .changelog-entry-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:2px;}
+  .changelog-del{padding:2px 7px;font-size:10.5px;}
   @media(max-width:640px){
     .cal-day{min-height:46px;padding:2px 2px 18px;}
     .cal-post{font-size:9px;padding:1px 3px;}
@@ -200,11 +202,12 @@ function describeChangeHtml(ch){
   }
   return escapeHtml(ch.label)+'：'+escapeHtml(ch.from)+' → '+escapeHtml(ch.to);
 }
-function renderChangeLog(changeLog){
+function renderChangeLog(changeLog, editable, campId, adsetId){
   if(!changeLog || !changeLog.length) return '';
   const entries = changeLog.slice().reverse().map(entry => {
     const items = (entry.changes||[]).map(ch=>`<div>${describeChangeHtml(ch)}</div>`).join('');
-    return `<div class="changelog-entry"><b>${escapeHtml(entry.date)}</b>${items}</div>`;
+    const delBtn = editable ? `<button class="small danger changelog-del" data-delchange="${campId}|${adsetId}|${entry.id}">刪除</button>` : '';
+    return `<div class="changelog-entry"><div class="changelog-entry-head"><b>${escapeHtml(entry.date)}</b>${delBtn}</div>${items}</div>`;
   }).join('');
   return `<div class="section-label" style="margin-top:10px">投放調整紀錄</div><div class="changelog">${entries}</div>`;
 }
@@ -833,7 +836,7 @@ function renderAdSetBlock(c, as){
       <div>預算：<b>HK$${(+as.budgetHKD||0).toLocaleString()}</b></div>
       <div style="grid-column:1/-1">目標受眾：<b>${escapeHtml(tgSummary)}</b></div>
     </div>
-    ${renderChangeLog(as.changeLog)}
+    ${renderChangeLog(as.changeLog, true, c.id, as.id)}
     ${ads.length ? `<div class="tablewrap"><table style="margin-top:8px">
       <tr><th>廣告名稱</th><th>花費</th><th>觸及</th><th>點擊</th><th>CTR</th><th>${obj.resultLabel}</th><th>${obj.costLabel}</th><th></th></tr>
       ${rows}
@@ -879,6 +882,17 @@ function wireAdsTabEvents(el){
       const camp = currentData.campaigns.find(c => c.id === cid);
       const as = camp.adsets.find(x => x.id === asid);
       as.ads = as.ads.filter(a => a.id !== adid);
+      await saveClient(currentId, currentData);
+      renderAdsTab();
+    });
+  });
+  el.querySelectorAll('[data-delchange]').forEach(b => {
+    const [cid, asid, changeId] = b.dataset.delchange.split('|');
+    b.addEventListener('click', async () => {
+      if(!confirm('確定刪除呢條調整紀錄？客戶頁面都會同步移除。')) return;
+      const camp = currentData.campaigns.find(c => c.id === cid);
+      const as = camp.adsets.find(x => x.id === asid);
+      as.changeLog = (as.changeLog||[]).filter(e => e.id !== changeId);
       await saveClient(currentId, currentData);
       renderAdsTab();
     });
