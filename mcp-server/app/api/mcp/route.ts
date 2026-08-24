@@ -3,7 +3,8 @@ import { z } from 'zod';
 import { getDb, COLLECTION } from '../../../lib/firebaseAdmin';
 import { mergeCampaigns } from '../../../lib/sync';
 
-const OBJECTIVES = ['Awareness', 'Traffic', 'Engagement', 'Leads', 'Messages', 'Sales', 'AppPromotion'] as const;
+const OBJECTIVES = ['Awareness', 'Traffic', 'Engagement', 'Leads', 'Sales', 'AppPromotion'] as const;
+const LEADS_RESULT_TYPES = ['form', 'messages'] as const;
 
 const targetingSchema = z.object({
   age: z.string().optional(),
@@ -28,6 +29,7 @@ const adsetSchema = z.object({
   endDate: z.string().optional(),
   budgetHKD: z.number().optional(),
   targeting: targetingSchema.optional(),
+  resultType: z.enum(LEADS_RESULT_TYPES).optional(),
   ads: z.array(adSchema).optional(),
 });
 
@@ -104,7 +106,7 @@ const mcpHandler = createMcpHandler((server) => {
     {
       title: 'Sync campaigns into a client',
       description:
-        'Upsert campaigns/ad sets/ads for a client, merged by name (case-insensitive, trimmed). Entries matched by name get their dates/budget/targeting/spend/reach/clicks/results updated in place; unmatched names are created as new campaigns/ad sets/ads. Never deletes existing data. Use this to push Meta Ads data (pulled via the Meta Ads MCP) into the portal — map objective to one of Awareness/Traffic/Engagement/Leads/Messages/Sales/AppPromotion (Messages is for OUTCOME_ENGAGEMENT campaigns whose destination is Messenger/WhatsApp/Instagram DM, i.e. optimized for conversations, not the generic Engagement objective), and set "results" to whatever the objective\'s primary metric is (leads, conversations/conversation starts, conversions, engagements, installs, link clicks...); leave results unset for Awareness campaigns since the portal derives CPM from reach directly.',
+        'Upsert campaigns/ad sets/ads for a client, merged by name (case-insensitive, trimmed). Entries matched by name get their dates/budget/targeting/resultType/spend/reach/clicks/results updated in place; unmatched names are created as new campaigns/ad sets/ads. Never deletes existing data. Use this to push Meta Ads data (pulled via the Meta Ads MCP) into the portal — map objective to one of Awareness/Traffic/Engagement/Leads/Sales/AppPromotion, and set "results" to whatever the objective\'s primary metric is (leads or conversation starts, conversions, engagements, installs, link clicks...); leave results unset for Awareness campaigns since the portal derives CPM from reach directly. For a Leads-objective ad set, also set adset.resultType to "messages" when its Meta conversion destination/optimization goal is Messenger/WhatsApp/Instagram DM (lead gen via conversation) rather than an Instant Form or website lead event — this is still the Leads objective in Meta\'s own model, just a different result metric (對話開始次數/cost per conversation started instead of 名單數/cost per lead). Leave resultType unset (defaults to form-based leads) for Instant Form or website-lead ad sets.',
       inputSchema: z.object({ clientId: z.string(), campaigns: z.array(campaignSchema) }),
     },
     async ({ clientId, campaigns }) => {

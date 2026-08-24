@@ -23,12 +23,17 @@ export type AdSetInput = {
   endDate?: string;
   budgetHKD?: number;
   targeting?: Targeting;
+  // Only meaningful when the parent campaign's objective is 'Leads': Meta's Leads
+  // objective can collect leads via an Instant Form ('form', the default) or via a
+  // Messenger/WhatsApp/IG conversation ('messages') -- same objective, different
+  // result metric (名單數/cost-per-lead vs 對話開始次數/cost-per-conversation-started).
+  resultType?: 'form' | 'messages';
   ads?: AdInput[];
 };
 
 export type CampaignInput = {
   name: string;
-  objective?: 'Awareness' | 'Traffic' | 'Engagement' | 'Leads' | 'Messages' | 'Sales' | 'AppPromotion';
+  objective?: 'Awareness' | 'Traffic' | 'Engagement' | 'Leads' | 'Sales' | 'AppPromotion';
   notes?: string;
   adsets?: AdSetInput[];
 };
@@ -77,6 +82,7 @@ export function mergeCampaigns(existing: any[], incoming: CampaignInput[]): any[
           endDate: inAs.endDate || '',
           budgetHKD: +(inAs.budgetHKD || 0),
           targeting: { ...emptyTargeting(), ...(inAs.targeting || {}) },
+          resultType: inAs.resultType || 'form',
           ads: [],
         };
         camp.adsets.push(as);
@@ -85,6 +91,7 @@ export function mergeCampaigns(existing: any[], incoming: CampaignInput[]): any[
         if (inAs.endDate !== undefined) as.endDate = inAs.endDate;
         if (inAs.budgetHKD !== undefined) as.budgetHKD = +inAs.budgetHKD || 0;
         if (inAs.targeting) as.targeting = { ...(as.targeting || emptyTargeting()), ...inAs.targeting };
+        if (inAs.resultType !== undefined) as.resultType = inAs.resultType;
         as.ads = Array.isArray(as.ads) ? as.ads : [];
       }
 
