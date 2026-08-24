@@ -111,6 +111,36 @@
   .changelog-entry b{color:var(--ink);font-size:11.5px;}
   .changelog-entry-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:2px;}
   .changelog-del{padding:2px 7px;font-size:10.5px;}
+  .card2{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:14px;}
+  .card2-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:2px;}
+  .card2-campaign{font-size:11.5px;color:var(--ink-dim);}
+  .card2-name{font-size:17px;font-weight:700;margin-top:4px;}
+  .meta-row{display:flex;gap:18px;flex-wrap:wrap;margin:10px 0 14px;font-size:12.5px;color:var(--ink-dim);}
+  .meta-row span b{color:var(--ink);font-weight:600;}
+  .section-h{font-size:11.5px;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin:14px 0 8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;}
+  .chip{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:4px 11px;font-size:12px;color:var(--ink);}
+  .chip.dim{color:var(--ink-dim);}
+  .interest-chips{margin-top:8px;}
+  .ad-stat-card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin-bottom:8px;}
+  .ad-stat-card:last-child{margin-bottom:0;}
+  .ad-stat-name-row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
+  .ad-stat-name{font-size:12.5px;color:var(--ink-dim);}
+  .ad-stat-hero{display:flex;align-items:baseline;gap:8px;margin-bottom:10px;}
+  .ad-stat-hero .num{font-size:22px;font-weight:700;color:var(--accent);}
+  .ad-stat-hero .lbl{font-size:12px;color:var(--ink-dim);}
+  .ad-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;font-size:11.5px;color:var(--ink-dim);}
+  .ad-stat-grid b{display:block;color:var(--ink);font-size:13px;font-weight:700;margin-bottom:1px;}
+  @media(max-width:640px){.ad-stat-grid{grid-template-columns:repeat(2,1fr);}}
+  .insight-card{background:linear-gradient(180deg, var(--accent-dim) 0%, var(--panel2) 60%);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:14px;}
+  .insight-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;}
+  .insight-campaign{font-size:16px;font-weight:700;}
+  .insight-body{font-size:13px;line-height:1.65;color:var(--ink);margin-top:2px;}
+  .insight-body p{margin:0 0 10px;}
+  .insight-body p:last-child{margin-bottom:0;}
+  .insight-body p.summary{color:var(--ink-dim);}
+  .insight-label{font-size:11px;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-top:14px;margin-bottom:6px;}
+  .insight-label:first-of-type{margin-top:12px;}
   @media(max-width:640px){
     .cal-day{min-height:46px;padding:2px 2px 18px;}
     .cal-post{font-size:9px;padding:1px 3px;}
@@ -209,7 +239,38 @@ function renderChangeLog(changeLog, editable, campId, adsetId){
     const delBtn = editable ? `<button class="small danger changelog-del" data-delchange="${campId}|${adsetId}|${entry.id}">刪除</button>` : '';
     return `<div class="changelog-entry"><div class="changelog-entry-head"><b>${escapeHtml(entry.date)}</b>${delBtn}</div>${items}</div>`;
   }).join('');
-  return `<div class="section-label" style="margin-top:10px">投放調整紀錄</div><div class="changelog">${entries}</div>`;
+  return `<div class="section-h">📝 投放調整紀錄</div><div class="changelog">${entries}</div>`;
+}
+
+/* ---------- campaign-level performance insight (shown once per campaign, not per ad set) ---------- */
+const CIRCLED_NUMS = ['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩'];
+function formatCampaignNotes(notes){
+  if(!notes) return { summaryParas: [], recItems: [] };
+  const idx = notes.search(/\(1\)/);
+  // strip a trailing lead-in phrase like "下次投放建議：" before "(1)" -- it's
+  // redundant with our own "💡 下次投放建議" section header below.
+  const summaryText = (idx >= 0 ? notes.slice(0, idx) : notes)
+    .replace(/[，,。]?\s*(下次)?(投放)?建議\s*[:：]?\s*$/, '')
+    .trim();
+  const recText = idx >= 0 ? notes.slice(idx).trim() : '';
+  const summaryParas = summaryText.split(/(?<=。)/).map(s=>s.trim()).filter(Boolean);
+  const recItems = recText ? recText.split(/\(\d+\)\s*/).map(s=>s.trim()).filter(Boolean) : [];
+  return { summaryParas, recItems };
+}
+function renderCampaignInsight(c){
+  if(!c.notes) return '';
+  const obj = OBJECTIVES[c.objective] || OBJECTIVES.Traffic;
+  const { summaryParas, recItems } = formatCampaignNotes(c.notes);
+  return `<div class="insight-card">
+    <div class="insight-top">
+      <div>
+        <div class="insight-campaign">${escapeHtml(c.name)}</div>
+        <span class="obj-pill">${obj.label}</span>
+      </div>
+    </div>
+    ${summaryParas.length ? `<div class="insight-label">📈 成效總結</div><div class="insight-body">${summaryParas.map(p=>`<p class="summary">${escapeHtml(p)}</p>`).join('')}</div>` : ''}
+    ${recItems.length ? `<div class="insight-label">💡 下次投放建議</div><div class="insight-body">${recItems.map((p,i)=>`<p>${CIRCLED_NUMS[i]||(i+1)+'.'} ${escapeHtml(p)}</p>`).join('')}</div>` : ''}
+  </div>`;
 }
 
 /* Legacy flat "ads" array (pre Campaign > Ad Set > Ad) -> nested campaigns shape.
@@ -324,36 +385,44 @@ function renderPublicAdSetBlock(c, as){
   const status = computeAdSetStatus(as);
   const tg = as.targeting || {};
   const ads = as.ads || [];
-  const adRows = ads.map(a=>{
+  const chips = [
+    tg.age ? `<span class="chip">👤 ${escapeHtml(tg.age)}</span>` : '',
+    tg.gender ? `<span class="chip">${escapeHtml(tg.gender)}</span>` : '',
+    tg.location ? `<span class="chip">📍 ${escapeHtml(tg.location)}</span>` : '',
+    tg.placement ? `<span class="chip">📲 ${escapeHtml(tg.placement)}</span>` : ''
+  ].filter(Boolean).join('');
+  const interestChips = splitInterests(tg.interests).map(x=>`<span class="chip dim">${escapeHtml(x)}</span>`).join('');
+  const adCards = ads.map(a=>{
     const m = adMetrics(a, c.objective);
-    return `<tr>
-      <td>${escapeHtml(a.name)}</td>
-      <td>HK$${(+a.spendHKD||0).toLocaleString()}</td>
-      <td>${(+a.reach||0).toLocaleString()}</td>
-      <td>${(+a.clicks||0).toLocaleString()}</td>
-      <td>${m.ctr}</td>
-      <td>${m.resultValue.toLocaleString()}</td>
-      <td>${m.costPerResult}</td>
-    </tr>`;
+    return `<div class="ad-stat-card">
+      <div class="ad-stat-name">${escapeHtml(a.name)}</div>
+      <div class="ad-stat-hero"><span class="num">${m.costPerResult}</span><span class="lbl">${obj.costLabel}</span></div>
+      <div class="ad-stat-grid">
+        <div>花費<b>HK$${(+a.spendHKD||0).toLocaleString()}</b></div>
+        <div>觸及<b>${(+a.reach||0).toLocaleString()}</b></div>
+        <div>點擊<b>${(+a.clicks||0).toLocaleString()}</b></div>
+        <div>CTR<b>${m.ctr}</b></div>
+      </div>
+    </div>`;
   }).join('');
-  return `<div class="client-card">
-    <div class="campaign-label">${escapeHtml(c.name)} · <span class="obj-pill">${obj.label}</span></div>
-    <h3>${escapeHtml(as.name)} <span class="status-pill ${statusPillClass(status)}">${STATUS_LABEL[status]}</span></h3>
-    ${c.notes ? `<div style="font-size:12.5px;color:var(--ink-dim);margin:6px 0">${escapeHtml(c.notes)}</div>` : ''}
-    <div class="kv">
-      <div>投放期間：<b>${as.startDate||'—'} → ${as.endDate||'—'}</b></div>
-      <div>預算：<b>HK$${(+as.budgetHKD||0).toLocaleString()}</b></div>
-      <div>年齡層：<b>${escapeHtml(tg.age)||'—'}</b></div>
-      <div>性別：<b>${escapeHtml(tg.gender)||'—'}</b></div>
-      <div>地區：<b>${escapeHtml(tg.location)||'—'}</b></div>
-      <div>版位：<b>${escapeHtml(tg.placement)||'—'}</b></div>
-      <div style="grid-column:1/-1">興趣 / 受眾特徵：<b>${escapeHtml(tg.interests)||'—'}</b></div>
+  return `<div class="card2">
+    <div class="card2-top">
+      <div>
+        <div class="card2-campaign">${escapeHtml(c.name)} · <span class="obj-pill">${obj.label}</span></div>
+        <div class="card2-name">${escapeHtml(as.name)}</div>
+      </div>
+      <span class="status-pill ${statusPillClass(status)}">${STATUS_LABEL[status]}</span>
     </div>
+    <div class="meta-row">
+      <span>📅 投放期間：<b>${as.startDate||'—'} → ${as.endDate||'—'}</b></span>
+      <span>💰 預算：<b>HK$${(+as.budgetHKD||0).toLocaleString()}</b></span>
+    </div>
+    <div class="section-h">🎯 目標受眾</div>
+    ${chips ? `<div class="chips">${chips}</div>` : ''}
+    ${interestChips ? `<div class="chips interest-chips">${interestChips}</div>` : ''}
+    <div class="section-h">📊 廣告成效</div>
+    ${ads.length ? adCards : '<div class="empty" style="padding:8px">未有廣告。</div>'}
     ${renderChangeLog(as.changeLog)}
-    ${ads.length ? `<div class="tablewrap"><table style="margin-top:8px">
-      <tr><th>廣告名稱</th><th>花費</th><th>觸及</th><th>點擊</th><th>CTR</th><th>${obj.resultLabel}</th><th>${obj.costLabel}</th></tr>
-      ${adRows}
-    </table></div>` : '<div class="empty" style="padding:8px">未有廣告。</div>'}
   </div>`;
 }
 
@@ -437,8 +506,13 @@ async function renderClientView(){
   const allPairs = [];
   campaigns.forEach(c => (c.adsets||[]).forEach(as => allPairs.push({ c, as })));
   const thisMonthPairs = allPairs.filter(({as}) => adsetInMonth(as, adsYear, adsMonth));
+  const seenInsightPub = new Set();
   const campaignCards = thisMonthPairs.length
-    ? thisMonthPairs.map(({c,as}) => renderPublicAdSetBlock(c, as)).join('')
+    ? thisMonthPairs.map(({c,as}) => {
+        let insight = '';
+        if(!seenInsightPub.has(c.id)){ seenInsightPub.add(c.id); insight = renderCampaignInsight(c); }
+        return insight + renderPublicAdSetBlock(c, as);
+      }).join('')
     : '<div class="empty">呢個月暫時未有廣告投放記錄。</div>';
 
   root.innerHTML = `
@@ -752,6 +826,13 @@ function renderAdsTab(){
   const thisMonthPairs = allPairs.filter(({as}) => adsetInMonth(as, adsYear, adsMonth));
   const undatedPairs = allPairs.filter(({as}) => !as.startDate && !as.endDate);
 
+  const seenInsight = new Set();
+  const withInsight = pairs => pairs.map(({c,as}) => {
+    let insight = '';
+    if(!seenInsight.has(c.id)){ seenInsight.add(c.id); insight = renderCampaignInsight(c); }
+    return insight + renderAdSetBlock(c, as);
+  }).join('');
+
   el.innerHTML = `
     <div class="panel">
       <div class="footer-actions" style="margin-top:0;margin-bottom:10px;">
@@ -766,11 +847,11 @@ function renderAdsTab(){
       <div class="cal-title">${adsYear}年${adsMonth+1}月嘅廣告投放</div>
       <button class="small" id="adsNextBtn">›</button>
     </div>
-    ${thisMonthPairs.length ? thisMonthPairs.map(({c,as}) => renderAdSetBlock(c, as)).join('') : '<div class="empty">呢個月冇廣告組合投放。</div>'}
+    ${thisMonthPairs.length ? withInsight(thisMonthPairs) : '<div class="empty">呢個月冇廣告組合投放。</div>'}
 
     ${undatedPairs.length ? `<div class="noundated-block">
       <div class="section-label">未定日期嘅廣告組合</div>
-      ${undatedPairs.map(({c,as}) => renderAdSetBlock(c, as)).join('')}
+      ${withInsight(undatedPairs)}
     </div>` : ''}
 
     <div id="adFormHolder"></div>
@@ -802,45 +883,57 @@ function renderCampaignStrip(campaigns){
 function renderAdSetBlock(c, as){
   const status = computeAdSetStatus(as);
   const tg = as.targeting || {};
-  const tgSummary = [tg.age, tg.gender, tg.location].filter(Boolean).join(' / ') || '—';
   const ads = as.ads || [];
   const obj = OBJECTIVES[c.objective] || OBJECTIVES.Traffic;
-  const rows = ads.map(a => {
+  const chips = [
+    tg.age ? `<span class="chip">👤 ${escapeHtml(tg.age)}</span>` : '',
+    tg.gender ? `<span class="chip">${escapeHtml(tg.gender)}</span>` : '',
+    tg.location ? `<span class="chip">📍 ${escapeHtml(tg.location)}</span>` : '',
+    tg.placement ? `<span class="chip">📲 ${escapeHtml(tg.placement)}</span>` : ''
+  ].filter(Boolean).join('');
+  const interestChips = splitInterests(tg.interests).map(x=>`<span class="chip dim">${escapeHtml(x)}</span>`).join('');
+  const adCards = ads.map(a => {
     const m = adMetrics(a, c.objective);
-    return `<tr>
-      <td>${escapeHtml(a.name)}</td>
-      <td>HK$${(+a.spendHKD||0).toLocaleString()}</td>
-      <td>${(+a.reach||0).toLocaleString()}</td>
-      <td>${(+a.clicks||0).toLocaleString()}</td>
-      <td>${m.ctr}</td>
-      <td>${m.resultValue.toLocaleString()}</td>
-      <td>${m.costPerResult}</td>
-      <td class="row-actions">
-        <button class="small" data-editad="${c.id}|${as.id}|${a.id}">編輯</button>
-        <button class="small danger" data-delad="${c.id}|${as.id}|${a.id}">刪除</button>
-      </td>
-    </tr>`;
-  }).join('');
-  return `<div class="panel adset-block-top">
-    <div class="campaign-label">${escapeHtml(c.name)} · <span class="obj-pill">${obj.label}</span></div>
-    <div class="adset-head">
-      <div><b>${escapeHtml(as.name)}</b> <span class="status-pill ${statusPillClass(status)}">${STATUS_LABEL[status]}</span></div>
-      <div class="row-actions">
-        <button class="small" data-addad="${c.id}|${as.id}">＋ 新增廣告</button>
-        <button class="small" data-editadset="${c.id}|${as.id}">編輯組合</button>
-        <button class="small danger" data-deladset="${c.id}|${as.id}">刪除組合</button>
+    return `<div class="ad-stat-card">
+      <div class="ad-stat-name-row">
+        <div class="ad-stat-name">${escapeHtml(a.name)}</div>
+        <div class="row-actions">
+          <button class="small" data-editad="${c.id}|${as.id}|${a.id}">編輯</button>
+          <button class="small danger" data-delad="${c.id}|${as.id}|${a.id}">刪除</button>
+        </div>
       </div>
+      <div class="ad-stat-hero"><span class="num">${m.costPerResult}</span><span class="lbl">${obj.costLabel}</span></div>
+      <div class="ad-stat-grid">
+        <div>花費<b>HK$${(+a.spendHKD||0).toLocaleString()}</b></div>
+        <div>觸及<b>${(+a.reach||0).toLocaleString()}</b></div>
+        <div>點擊<b>${(+a.clicks||0).toLocaleString()}</b></div>
+        <div>CTR<b>${m.ctr}</b></div>
+      </div>
+    </div>`;
+  }).join('');
+  return `<div class="card2">
+    <div class="card2-top">
+      <div>
+        <div class="card2-campaign">${escapeHtml(c.name)} · <span class="obj-pill">${obj.label}</span></div>
+        <div class="card2-name">${escapeHtml(as.name)}</div>
+      </div>
+      <span class="status-pill ${statusPillClass(status)}">${STATUS_LABEL[status]}</span>
     </div>
-    <div class="kv">
-      <div>投放期間：<b>${as.startDate||'—'} → ${as.endDate||'—'}</b></div>
-      <div>預算：<b>HK$${(+as.budgetHKD||0).toLocaleString()}</b></div>
-      <div style="grid-column:1/-1">目標受眾：<b>${escapeHtml(tgSummary)}</b></div>
+    <div class="row-actions" style="margin-top:8px">
+      <button class="small" data-addad="${c.id}|${as.id}">＋ 新增廣告</button>
+      <button class="small" data-editadset="${c.id}|${as.id}">編輯組合</button>
+      <button class="small danger" data-deladset="${c.id}|${as.id}">刪除組合</button>
     </div>
+    <div class="meta-row">
+      <span>📅 投放期間：<b>${as.startDate||'—'} → ${as.endDate||'—'}</b></span>
+      <span>💰 預算：<b>HK$${(+as.budgetHKD||0).toLocaleString()}</b></span>
+    </div>
+    <div class="section-h">🎯 目標受眾</div>
+    ${chips ? `<div class="chips">${chips}</div>` : ''}
+    ${interestChips ? `<div class="chips interest-chips">${interestChips}</div>` : ''}
+    <div class="section-h">📊 廣告成效</div>
+    ${ads.length ? adCards : '<div class="empty" style="padding:8px">未有廣告。</div>'}
     ${renderChangeLog(as.changeLog, true, c.id, as.id)}
-    ${ads.length ? `<div class="tablewrap"><table style="margin-top:8px">
-      <tr><th>廣告名稱</th><th>花費</th><th>觸及</th><th>點擊</th><th>CTR</th><th>${obj.resultLabel}</th><th>${obj.costLabel}</th><th></th></tr>
-      ${rows}
-    </table></div>` : '<div class="empty" style="padding:8px">未有廣告。</div>'}
   </div>`;
 }
 

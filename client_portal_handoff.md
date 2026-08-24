@@ -141,7 +141,23 @@ window.storage> }`.
 > a save doesn't actually change any targeting field. Shown to both admin
 > and the public client view — this is the one thing besides ad
 > performance itself that's visible to clients by design, so they can see
-> what was optimized and when.
+> what was optimized and when. Each entry has a delete button in admin
+> only (with a confirm prompt); the public view is always read-only.
+>
+> Ad set / ad cards were redesigned for readability (chip-style targeting
+> tags instead of a dense grid, each ad as a stat card with its cost-per-
+> result as the headline number instead of a table row) — same markup on
+> both admin and public, admin's just adds the edit/delete controls.
+> `campaign.notes` no longer renders inside every ad set card (it used to
+> repeat once per ad set, which double- or triple-printed the same text
+> when a campaign had multiple ad sets active in one month). It now
+> renders once per campaign as a separate "insight card" — split into a
+> 成效總結 (summary) section and, if the text contains a "(1) ... (2) ..."
+> numbered list, a 💡 下次投放建議 (recommendations) section with each item
+> circled-numbered — shown above that campaign's ad set card(s) the first
+> time it appears in a given render (admin's month view + undated
+> section, and the public view, each track this independently so it's
+> never duplicated within either).
 
 ```
 clients-index        -> [{ id, name }, ...]
