@@ -108,14 +108,30 @@ window.storage> }`.
 > client is opened — no manual migration needed.
 >
 > Also updated: post quota's "used" count is no longer typed in directly.
-> It's now computed as `quota.<type>.usedBaseline + count(posts of that
-> type)` — `posts` is a dated, titled delivery log that renders as a
-> month calendar (editable in admin, read-only in the public client view).
-> Old `quota.<type>.used` values migrate into `usedBaseline` automatically
-> (same write-back-on-first-open behavior as the ads migration above), so
-> existing totals aren't lost even though there's no historical per-post
-> detail behind them — new usage should be logged through the calendar
-> going forward so titles/dates are tracked.
+> It's now computed as `quota.<type>.usedBaseline + count(delivered posts
+> of that type)` — `posts` is a dated, titled delivery log that renders as
+> a month calendar (editable in admin, read-only in the public client
+> view). Old `quota.<type>.used` values migrate into `usedBaseline`
+> automatically (same write-back-on-first-open behavior as the ads
+> migration above), so existing totals aren't lost even though there's no
+> historical per-post detail behind them — new usage should be logged
+> through the calendar going forward so titles/dates are tracked.
+>
+> `posts[].hours` and `posts[].status` are admin-only: `hours` is a
+> per-post time-tracking number (summed into a monthly-by-type total shown
+> only in the admin Quota tab), and `status` is `"draft"` or `"delivered"`
+> — draft posts don't count toward quota and are filtered out of the
+> public client view entirely (for pre-placing a client's shared content
+> calendar before it's actually posted). Missing `status` is treated as
+> `"delivered"` for backward compatibility with posts logged before this
+> field existed.
+>
+> Ads are now grouped by month everywhere (admin Ads tab and the public
+> view): an ad set's `startDate`/`endDate` determine which calendar
+> month(s) it's shown under, and an ad set spanning a month boundary
+> appears in both months. Ad sets with neither date set show in an
+> always-visible "未定日期" (undated) section in admin only — the public
+> view only ever shows dated ad sets.
 
 ```
 clients-index        -> [{ id, name }, ...]
@@ -127,7 +143,11 @@ client:<clientId>    -> {
     reels:    { signed: number, usedBaseline: number }
   },
   posts: [
-    { id, date, type: "static" | "carousel" | "reels", title }   // date: "YYYY-MM-DD"
+    {
+      id, date, type: "static" | "carousel" | "reels", title,   // date: "YYYY-MM-DD"
+      hours,                          // admin-only time tracking, number
+      status: "delivered" | "draft"   // draft = not counted, hidden from public view
+    }
   ],
   campaigns: [
     {
