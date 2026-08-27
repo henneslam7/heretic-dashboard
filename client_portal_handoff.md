@@ -141,8 +141,16 @@ window.storage> }`.
 > a save doesn't actually change any targeting field. Shown to both admin
 > and the public client view — this is the one thing besides ad
 > performance itself that's visible to clients by design, so they can see
-> what was optimized and when. Each entry has a delete button in admin
-> only (with a confirm prompt); the public view is always read-only.
+> what was optimized and when. Each entry has edit and delete buttons in
+> admin only (delete has a confirm prompt); the public view is always
+> read-only. Edit (`showChangeLogEditForm`) opens a form for that one
+> entry's date plus every recorded change within it — a from/to pair for
+> age/gender/location/placement, or added/removed interest lists (comma-
+> or `、`-separated) for interests — and overwrites the entry in place on
+> save. This is a manual correction tool (e.g. fixing a wrong date or a
+> misrecorded value), separate from the auto-diff that creates entries in
+> the first place; it doesn't re-diff against the ad set's current
+> targeting.
 >
 > The same auto-diff also runs inside the MCP server's `sync_campaigns`
 > tool (`mergeCampaigns()` in `mcp-server/lib/sync.ts`), not just the

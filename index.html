@@ -256,8 +256,11 @@ function renderChangeLog(changeLog, editable, campId, adsetId){
   if(!changeLog || !changeLog.length) return '';
   const entries = changeLog.slice().reverse().map(entry => {
     const items = (entry.changes||[]).map(ch=>`<div>${describeChangeHtml(ch)}</div>`).join('');
-    const delBtn = editable ? `<button class="small danger changelog-del" data-delchange="${campId}|${adsetId}|${entry.id}">刪除</button>` : '';
-    return `<div class="changelog-entry"><div class="changelog-entry-head"><b>${escapeHtml(entry.date)}</b>${delBtn}</div>${items}</div>`;
+    const actions = editable ? `<div class="row-actions">
+        <button class="small changelog-del" data-editchange="${campId}|${adsetId}|${entry.id}">編輯</button>
+        <button class="small danger changelog-del" data-delchange="${campId}|${adsetId}|${entry.id}">刪除</button>
+      </div>` : '';
+    return `<div class="changelog-entry"><div class="changelog-entry-head"><b>${escapeHtml(entry.date)}</b>${actions}</div>${items}</div>`;
   }).join('');
   return `<div class="section-h">📝 投放調整紀錄</div><div class="changelog">${entries}</div>`;
 }
@@ -1015,6 +1018,10 @@ function wireAdsTabEvents(el){
       renderAdsTab();
     });
   });
+  el.querySelectorAll('[data-editchange]').forEach(b => {
+    const [cid, asid, changeId] = b.dataset.editchange.split('|');
+    b.addEventListener('click', () => showChangeLogEditForm(cid, asid, changeId));
+  });
   el.querySelectorAll('[data-delchange]').forEach(b => {
     const [cid, asid, changeId] = b.dataset.delchange.split('|');
     b.addEventListener('click', async () => {
@@ -1187,6 +1194,56 @@ function showAdForm(campId, adsetId, adId){
     ad.notes = document.getElementById('f_ad_notes').value;
     const idx = as.ads.findIndex(a=>a.id===ad.id);
     if(idx>=0) as.ads[idx]=ad; else as.ads.push(ad);
+    await saveClient(currentId, currentData);
+    holder.innerHTML='';
+    renderAdsTab();
+  });
+}
+
+function showChangeLogEditForm(campId, adsetId, changeId){
+  const camp = currentData.campaigns.find(c=>c.id===campId);
+  const as = camp.adsets.find(x=>x.id===adsetId);
+  const entry = (as.changeLog||[]).find(e=>e.id===changeId);
+  if(!entry) return;
+  const holder = document.getElementById('adFormHolder');
+  const rows = (entry.changes||[]).map((ch, i) => {
+    if(ch.added || ch.removed){
+      return `<div class="field-row">
+        <div><label>${escapeHtml(ch.label)}（新增，用「、」分隔）</label><input id="f_chg_${i}_added" value="${escapeHtml((ch.added||[]).join('、'))}"></div>
+        <div><label>${escapeHtml(ch.label)}（移除，用「、」分隔）</label><input id="f_chg_${i}_removed" value="${escapeHtml((ch.removed||[]).join('、'))}"></div>
+      </div>`;
+    }
+    return `<div class="field-row">
+      <div><label>${escapeHtml(ch.label)}（由）</label><input id="f_chg_${i}_from" value="${escapeHtml(ch.from||'')}"></div>
+      <div><label>${escapeHtml(ch.label)}（去）</label><input id="f_chg_${i}_to" value="${escapeHtml(ch.to||'')}"></div>
+    </div>`;
+  }).join('');
+  holder.innerHTML = `
+    <div class="panel">
+      <div class="section-label" style="margin-top:0">編輯投放調整紀錄 － ${escapeHtml(as.name)}</div>
+      <div class="field-row">
+        <div><label>日期</label><input type="date" id="f_chg_date" value="${entry.date||''}"></div>
+      </div>
+      ${rows}
+      <div class="footer-actions">
+        <button class="primary" id="saveChangeLogBtn">儲存</button>
+        <button id="cancelChangeLogBtn">取消</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('cancelChangeLogBtn').addEventListener('click', () => holder.innerHTML='');
+  document.getElementById('saveChangeLogBtn').addEventListener('click', async () => {
+    entry.date = document.getElementById('f_chg_date').value || entry.date;
+    entry.changes = (entry.changes||[]).map((ch, i) => {
+      if(ch.added || ch.removed){
+        const added = splitInterests(document.getElementById(`f_chg_${i}_added`).value);
+        const removed = splitInterests(document.getElementById(`f_chg_${i}_removed`).value);
+        return { field: ch.field, label: ch.label, added, removed };
+      }
+      const from = document.getElementById(`f_chg_${i}_from`).value.trim() || '—';
+      const to = document.getElementById(`f_chg_${i}_to`).value.trim() || '—';
+      return { field: ch.field, label: ch.label, from, to };
+    });
     await saveClient(currentId, currentData);
     holder.innerHTML='';
     renderAdsTab();
