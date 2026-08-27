@@ -144,6 +144,19 @@ window.storage> }`.
 > what was optimized and when. Each entry has a delete button in admin
 > only (with a confirm prompt); the public view is always read-only.
 >
+> The same auto-diff also runs inside the MCP server's `sync_campaigns`
+> tool (`mergeCampaigns()` in `mcp-server/lib/sync.ts`), not just the
+> admin UI's save handler — `diffTargeting()`/`splitInterests()` are
+> duplicated there (TypeScript, server-side) to match `index.html`'s
+> client-side JS versions field-for-field. This matters because
+> `sync_campaigns` is also how Claude (via a scheduled Cowork task
+> running against the Portal MCP connector) pushes updated Meta Ads data
+> into the portal — before this, a targeting change made that way (e.g.
+> narrowing an age range) silently overwrote `targeting` with no
+> changeLog entry at all, since `mergeCampaigns()` did a plain merge with
+> no diffing. Same rule as the UI: no entry on an ad set's first sync,
+> none when a sync doesn't actually change any targeting field.
+>
 > Ad set / ad cards were redesigned for readability (chip-style targeting
 > tags instead of a dense grid, each ad as a stat card with its cost-per-
 > result as the headline number instead of a table row) — same markup on

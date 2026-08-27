@@ -50,6 +50,36 @@ function emptyTargeting(): Targeting {
   return { age: '', gender: '不限', location: '', interests: '', placement: '' };
 }
 
+function splitInterests(s: string | undefined): string[] {
+  return (s || '').split(/[,，、]/).map(x => x.trim()).filter(Boolean);
+}
+
+const TARGETING_FIELD_LABELS: Record<string, string> = { age: '年齡層', gender: '性別', location: '地區', placement: '版位' };
+
+/**
+ * Mirrors index.html's diffTargeting() so ad set targeting changes made via
+ * this MCP server (e.g. a Claude Cowork scheduled sync) get the same
+ * auto-logged changeLog entry as an edit made through the admin UI --
+ * previously this function didn't exist here at all, so syncing a targeting
+ * change (e.g. a narrowed age range) silently overwrote it with no record.
+ */
+function diffTargeting(oldTg: Targeting, newTg: Targeting): any[] {
+  const changes: any[] = [];
+  for (const field of Object.keys(TARGETING_FIELD_LABELS)) {
+    const from = ((oldTg as any)[field] || '').trim();
+    const to = ((newTg as any)[field] || '').trim();
+    if (from !== to) changes.push({ field, label: TARGETING_FIELD_LABELS[field], from: from || '—', to: to || '—' });
+  }
+  const oldInt = splitInterests(oldTg.interests), newInt = splitInterests(newTg.interests);
+  if (oldInt.join('|') !== newInt.join('|')) {
+    const added = newInt.filter(x => !oldInt.includes(x));
+    const removed = oldInt.filter(x => !newInt.includes(x));
+    if (added.length || removed.length) changes.push({ field: 'interests', label: '興趣', added, removed });
+    else changes.push({ field: 'interests', label: '興趣', from: oldTg.interests || '—', to: newTg.interests || '—' });
+  }
+  return changes;
+}
+
 /**
  * Upsert campaigns/ad sets/ads into an existing campaigns array, matched by
  * name (case-insensitive, trimmed). Matched entries have their fields
@@ -90,7 +120,16 @@ export function mergeCampaigns(existing: any[], incoming: CampaignInput[]): any[
         if (inAs.startDate !== undefined) as.startDate = inAs.startDate;
         if (inAs.endDate !== undefined) as.endDate = inAs.endDate;
         if (inAs.budgetHKD !== undefined) as.budgetHKD = +inAs.budgetHKD || 0;
-        if (inAs.targeting) as.targeting = { ...(as.targeting || emptyTargeting()), ...inAs.targeting };
+        if (inAs.targeting) {
+          const oldTargeting = as.targeting || emptyTargeting();
+          const mergedTargeting = { ...oldTargeting, ...inAs.targeting };
+          const changes = diffTargeting(oldTargeting, mergedTargeting);
+          if (changes.length) {
+            as.changeLog = Array.isArray(as.changeLog) ? as.changeLog : [];
+            as.changeLog.push({ id: uid(), date: new Date().toISOString().slice(0, 10), changes });
+          }
+          as.targeting = mergedTargeting;
+        }
         if (inAs.resultType !== undefined) as.resultType = inAs.resultType;
         as.ads = Array.isArray(as.ads) ? as.ads : [];
       }
