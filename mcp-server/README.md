@@ -15,6 +15,20 @@ unlike the static site, which stays build-free.
 - `set_client_meta_account` — map a client to a Meta Ads Ad Account ID (e.g. `act_1234567890`).
 - `sync_campaigns` — upsert campaigns/ad sets/ads for a client, merged by name. Never deletes existing data.
 - `update_quota` — update a client's post quota counts.
+- `get_analysis_history` — read a client's internal agent analysis history (newest first). Optional `campaignName`, `limit` (default 20, max 200), `since` (ISO date).
+- `append_analysis_history` — append entries (finding / suggestion / decision, each with a status) to that history. `id`/`timestamp` are server-generated; `campaignName` must match an existing campaign. Pure append.
+- `update_analysis_history_status` — change one history entry's `status` (proposed / approved / rejected / implemented / superseded). Nothing else on the entry changes.
+
+### Analysis history (internal-only)
+
+Stored as a Firestore **subcollection**: `clientPortal/client:<id>/analysisHistory/<entryId>`,
+one doc per entry. It is deliberately *not* a field on the client doc: the public
+client view reads that whole doc from the browser, and the admin UI overwrites it
+wholesale on save. The documented rules (`match /clientPortal/{docId}`) don't cover
+subcollections, so web clients are denied by default while this server (Admin SDK)
+can still read/write. **Do not add a wildcard rule such as
+`match /clientPortal/{document=**}`** — that would expose the history to clients.
+It is never included in `get_client` output.
 
 ## Local setup
 
