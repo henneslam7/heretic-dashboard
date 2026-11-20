@@ -154,6 +154,92 @@
     .cal-post{font-size:9px;padding:1px 3px;}
     .cal-add{font-size:10px;padding:0 3px;}
   }
+
+  /* ---------- admin Ads tab: month view + inline editors ---------- */
+  .ads-toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+  .year-nav{display:flex;align-items:center;gap:8px;}
+  .year-label{font-size:15px;font-weight:700;min-width:60px;text-align:center;}
+  .month-pills{display:grid;grid-template-columns:repeat(12,1fr);gap:4px;margin-bottom:14px;}
+  .month-pill{position:relative;padding:8px 0;font-size:12.5px;text-align:center;color:var(--ink-dim);background:var(--panel);}
+  .month-pill i{font-style:normal;position:absolute;top:2px;right:4px;font-size:9.5px;line-height:1;color:var(--accent);}
+  .month-pill.cur{border-color:var(--ink-dim);}
+  .month-pill.active{background:var(--accent);border-color:var(--accent);color:#0c1210;font-weight:700;}
+  .month-pill.active i{color:#0c1210;}
+  @media(max-width:640px){.month-pills{grid-template-columns:repeat(6,1fr);}}
+  .ads-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;}
+  @media(max-width:640px){.ads-summary{grid-template-columns:repeat(2,1fr);}}
+  .sum-tile{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;}
+  .sum-tile .k{font-size:11px;color:var(--ink-dim);margin-bottom:3px;}
+  .sum-tile .v{font-size:18px;font-weight:700;}
+  .sum-tile .v span{font-size:12px;font-weight:500;color:var(--ink-dim);margin-left:6px;}
+  .camp-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:14px;}
+  .camp-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;}
+  .camp-title{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0;}
+  .camp-title .obj-pill{margin-top:0;}
+  .camp-name{font-size:16px;font-weight:700;word-break:break-word;}
+  .link-btn{background:none;border:none;padding:6px 0 0;color:var(--ink-dim);font-size:12px;}
+  .link-btn:hover{color:var(--accent);}
+  .insight-wrap{background:var(--panel2);border-radius:8px;padding:2px 14px 12px;margin-top:6px;}
+  .as-card{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-top:12px;}
+  .as-head{display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer;}
+  .as-title{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0;}
+  .as-name{font-size:14px;font-weight:600;word-break:break-word;}
+  .chev{color:var(--ink-dim);font-size:12px;width:12px;}
+  .as-stats{display:grid;grid-template-columns:1.1fr 1.6fr 1fr 1.2fr .8fr;gap:12px;margin:10px 0 4px;}
+  @media(max-width:760px){.as-stats{grid-template-columns:repeat(2,1fr);}}
+  .as-stat .k{font-size:11px;color:var(--ink-dim);margin-bottom:2px;}
+  .as-stat .v{font-size:13.5px;font-weight:700;}
+  .as-stat .v span{font-weight:400;color:var(--ink-dim);font-size:12px;}
+  .as-stat .v.accent{color:var(--accent);}
+  .bar.mini{height:4px;margin-top:5px;}
+  .as-details{border-top:1px dashed var(--line);margin-top:10px;padding-top:10px;}
+  .ad-table{margin-top:10px;border-top:1px solid var(--line);}
+  .ad-row{display:grid;grid-template-columns:minmax(0,2.4fr) repeat(4,minmax(0,1fr)) 24px;gap:8px;align-items:center;padding:9px 6px;border-bottom:1px solid var(--line);font-size:12.5px;}
+  .ad-row.head{font-size:11px;color:var(--ink-dim);font-weight:600;padding:6px;}
+  .ad-row:not(.head){cursor:pointer;border-radius:6px;transition:background .12s;}
+  .ad-row:not(.head):hover,.ad-row:not(.head):focus-visible{background:rgba(110,231,208,.07);outline:none;}
+  .ad-row.editing{background:rgba(110,231,208,.1);border-bottom-color:transparent;}
+  .ad-row .name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;}
+  .ad-row .go{color:var(--ink-dim);text-align:right;}
+  .ad-row:hover .go{color:var(--accent);}
+  @media(max-width:640px){
+    .ad-row.head{display:none;}
+    .ad-row{grid-template-columns:repeat(4,1fr) 24px;row-gap:6px;}
+    .ad-row .name{grid-column:1/5;}
+    .ad-row .go{grid-column:5;grid-row:1;}
+    .ad-row .c[data-l]::before{content:attr(data-l);display:block;font-size:10px;color:var(--ink-dim);font-weight:400;}
+  }
+  .add-row{width:100%;margin-top:8px;border-style:dashed;background:transparent;color:var(--ink-dim);}
+  .add-row:hover{color:var(--accent);}
+  .empty.slim{padding:10px;}
+  .editor{background:var(--bg);border:1px solid var(--accent-dim);border-left:3px solid var(--accent);border-radius:8px;padding:14px 16px;margin:8px 0 12px;animation:editorIn .16s ease-out;}
+  @keyframes editorIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:none;}}
+  .editor-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+  .editor-title{font-size:13.5px;font-weight:700;}
+  .editor-title .crumb{font-weight:400;color:var(--ink-dim);font-size:12px;margin-left:6px;}
+  .icon-btn{background:none;border:none;color:var(--ink-dim);padding:2px 6px;font-size:14px;}
+  .icon-btn:hover{color:var(--ink);}
+  .ef-section{font-size:11.5px;color:var(--accent);font-weight:700;letter-spacing:.04em;margin:14px 0 8px;display:flex;align-items:center;gap:8px;}
+  .ef-section .hint{font-weight:400;letter-spacing:0;}
+  .ef-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 12px;margin-bottom:2px;}
+  .ef.wide{grid-column:1/-1;}
+  .ef label{display:block;font-size:11.5px;color:var(--ink-dim);margin-bottom:4px;}
+  .ef input,.ef select,.ef textarea{width:100%;}
+  .ef textarea{resize:vertical;line-height:1.5;}
+  .ef input:focus,.ef select:focus,.ef textarea:focus,.affix:focus-within{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-dim);}
+  .affix{display:flex;align-items:center;background:var(--panel2);border:1px solid var(--line);border-radius:8px;}
+  .affix span{padding:0 0 0 10px;font-size:12px;color:var(--ink-dim);}
+  .affix input{border:none;background:transparent;box-shadow:none!important;}
+  .hint{font-size:11px;color:var(--ink-dim);margin-top:4px;}
+  .preview{display:flex;gap:18px;flex-wrap:wrap;background:var(--panel);border-radius:8px;padding:8px 12px;margin-top:10px;font-size:12px;color:var(--ink-dim);}
+  .preview b{color:var(--accent);font-size:13.5px;margin-left:4px;}
+  .form-err{background:#3d2020;color:#f29a9a;border-radius:6px;padding:7px 10px;font-size:12.5px;margin-top:10px;}
+  .editor-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);}
+  .editor-actions .spacer{flex:1;}
+  .editor-actions .kbd{margin:0 0 0 6px;}
+  @media(max-width:640px){.editor-actions .kbd{display:none;}}
+  .flash{animation:flashRow 1.4s ease-out;}
+  @keyframes flashRow{0%{box-shadow:0 0 0 2px var(--accent);}100%{box-shadow:0 0 0 2px transparent;}}
 </style>
 
 <div id="root"></div>
@@ -744,6 +830,7 @@ async function selectClient(id){
   }
   await saveClient(id, currentData); // persists first-time creation or, for legacy clients, the migrated campaigns shape
   document.getElementById('shareBoxHolder').innerHTML = '';
+  adsEdit = null;
   document.getElementById('app').style.display = clients.length ? 'block' : 'none';
   document.getElementById('noClient').style.display = clients.length ? 'none' : 'block';
   document.getElementById('subhead').textContent = clients.length ? subheadText(currentData) : '未有客戶資料。';
@@ -890,74 +977,407 @@ function showPostForm(dateStr, postId){
   });
 }
 
-/* ---------- ADS TAB (Campaign > Ad Set > Ad) ---------- */
+/* ---------- ADS TAB (admin): month view, compact rows, inline editors ---------- */
+// Only one editor is open at a time. adsEdit = { kind:'campaign'|'adset'|'ad'|'change', isNew, campId, adsetId, id, draft }
+// `draft` is the real object when editing an existing item (only mutated on save) or a fresh object when adding.
+let adsEdit = null;
+const adsOpenDetails = new Set();   // ad set ids whose targeting + change log are expanded
+const adsOpenInsights = new Set();  // campaign ids whose performance summary is expanded
+let adsFlashId = null;              // id of the row just saved, briefly highlighted after re-render
+
+function fmtHKD(n){ return 'HK$' + (+n||0).toLocaleString(); }
+function pad2(n){ return String(n).padStart(2,'0'); }
+function fmtShortDate(d){
+  if(!d) return '—';
+  const [y,m,day] = d.split('-');
+  return (+y !== adsYear ? y.slice(2)+'/' : '') + (+m) + '/' + (+day);
+}
+function monthRange(y, m){
+  return [`${y}-${pad2(m+1)}-01`, `${y}-${pad2(m+1)}-${pad2(new Date(y, m+1, 0).getDate())}`];
+}
+function findCamp(id){ return (currentData.campaigns||[]).find(c => c.id === id); }
+function findAdset(cid, asid){ const c = findCamp(cid); return c && (c.adsets||[]).find(a => a.id === asid); }
+function adsetTotals(c, as){
+  const t = (as.ads||[]).reduce((s,a) => ({
+    spend: s.spend + (+a.spendHKD||0), reach: s.reach + (+a.reach||0),
+    clicks: s.clicks + (+a.clicks||0), results: s.results + (+a.results||0)
+  }), {spend:0, reach:0, clicks:0, results:0});
+  const m = adMetrics({spendHKD:t.spend, reach:t.reach, clicks:t.clicks, results:t.results}, c.objective, as.resultType);
+  return Object.assign({}, t, m);
+}
+const isEditing = (kind, id) => !!adsEdit && adsEdit.kind === kind && !adsEdit.isNew && adsEdit.id === id;
+const isAdding = (kind, key, val) => !!adsEdit && adsEdit.kind === kind && adsEdit.isNew && adsEdit[key] === val;
+
 function renderAdsTab(){
   const el = document.getElementById('tab-ads');
   const campaigns = currentData.campaigns || [];
-  let totalBudget = 0, totalSpend = 0;
-  campaigns.forEach(c => (c.adsets||[]).forEach(as => {
-    totalBudget += +as.budgetHKD||0;
-    (as.ads||[]).forEach(a => totalSpend += +a.spendHKD||0);
-  }));
-
   if(adsYear === null){ const now = new Date(); adsYear = now.getFullYear(); adsMonth = now.getMonth(); }
+  wireAdsTabEvents(el);
 
-  // flatten (campaign, adset) pairs so we can group by month independently of campaign nesting
   const allPairs = [];
   campaigns.forEach(c => (c.adsets||[]).forEach(as => allPairs.push({ c, as })));
-  const thisMonthPairs = allPairs.filter(({as}) => adsetInMonth(as, adsYear, adsMonth));
-  const undatedPairs = allPairs.filter(({as}) => !as.startDate && !as.endDate);
-  const thisMonthGroups = groupAndSortPairs(thisMonthPairs);
-  const undatedGroups = groupAndSortPairs(undatedPairs);
+  const monthPairs = allPairs.filter(({as}) => adsetInMonth(as, adsYear, adsMonth));
+  const monthGroups = groupAndSortPairs(monthPairs);
+  const undatedGroups = groupAndSortPairs(allPairs.filter(({as}) => !as.startDate && !as.endDate));
+  const seen = new Set(undatedGroups.map(g => g.c.id));
+  campaigns.filter(c => !(c.adsets||[]).length && !seen.has(c.id)).forEach(c => undatedGroups.push({ c, adsets: [] }));
+
+  // how many ad sets touch each month of the selected year (drives the month pills)
+  const counts = Array(12).fill(0);
+  allPairs.forEach(({as}) => monthsSpanned(as.startDate, as.endDate).forEach(k => {
+    const [y, m] = k.split('-'); if(+y === adsYear) counts[+m]++;
+  }));
+  const now = new Date();
+
+  let budget = 0, spend = 0, adCount = 0;
+  monthPairs.forEach(({as}) => {
+    budget += +as.budgetHKD||0;
+    (as.ads||[]).forEach(a => { spend += +a.spendHKD||0; adCount++; });
+  });
 
   el.innerHTML = `
-    <div class="panel">
-      <div class="footer-actions" style="margin-top:0;margin-bottom:10px;">
-        <button class="primary" id="addCampaignBtn">＋ 新增行銷活動 (Campaign)</button>
-        <span class="totals" style="align-self:center">總預算：HK$${totalBudget.toLocaleString()} · 總花費：HK$${totalSpend.toLocaleString()}</span>
+    <div class="ads-toolbar">
+      <div class="year-nav">
+        <button class="small" data-act="year-prev" aria-label="上一年">‹</button>
+        <span class="year-label">${adsYear}年</span>
+        <button class="small" data-act="year-next" aria-label="下一年">›</button>
+        <button class="small" data-act="today">今個月</button>
       </div>
-      ${campaigns.length ? renderCampaignStrip(campaigns) : '<div class="empty">未有廣告活動記錄。</div>'}
+      <button class="primary" data-act="new-camp">＋ 新增 Campaign</button>
     </div>
-
-    <div class="cal-head">
-      <button class="small" id="adsPrevBtn">‹</button>
-      <div class="cal-title">${adsYear}年${adsMonth+1}月嘅廣告投放</div>
-      <button class="small" id="adsNextBtn">›</button>
+    <div class="month-pills">
+      ${counts.map((n, m) => `<button class="month-pill${m===adsMonth?' active':''}${(adsYear===now.getFullYear()&&m===now.getMonth())?' cur':''}" data-act="month" data-m="${m}">${m+1}月${n ? `<i>${n}</i>` : ''}</button>`).join('')}
     </div>
-    ${thisMonthGroups.length ? thisMonthGroups.map(g=>renderCampaignGroup(g,true)).join('') : '<div class="empty">呢個月冇廣告組合投放。</div>'}
-
-    ${undatedGroups.length ? `<div class="noundated-block">
-      <div class="section-label">未定日期嘅廣告組合</div>
-      ${undatedGroups.map(g=>renderCampaignGroup(g,true)).join('')}
-    </div>` : ''}
-
-    <div id="adFormHolder"></div>
+    ${adsEdit && adsEdit.kind==='campaign' && adsEdit.isNew ? renderCampaignEditor() : ''}
+    <div class="ads-summary">
+      <div class="sum-tile"><div class="k">${adsMonth+1}月 廣告組合</div><div class="v">${monthPairs.length}</div></div>
+      <div class="sum-tile"><div class="k">廣告數量</div><div class="v">${adCount}</div></div>
+      <div class="sum-tile"><div class="k">預算</div><div class="v">${fmtHKD(budget)}</div></div>
+      <div class="sum-tile"><div class="k">花費</div><div class="v">${fmtHKD(spend)}${budget>0 ? `<span>${Math.round(spend/budget*100)}%</span>` : ''}</div></div>
+    </div>
+    ${monthGroups.length ? monthGroups.map(renderAdminCampaign).join('') : `<div class="empty">${adsYear}年${adsMonth+1}月未有廣告投放。揀其他月份，或按「＋ 新增 Campaign」。</div>`}
+    ${undatedGroups.length ? `<div class="section-label" style="margin-top:22px">未定日期 / 未有廣告組合</div>${undatedGroups.map(renderAdminCampaign).join('')}` : ''}
   `;
-  document.getElementById('addCampaignBtn').addEventListener('click', () => showCampaignForm(null));
-  document.getElementById('adsPrevBtn').addEventListener('click', () => { adsMonth--; if(adsMonth<0){adsMonth=11;adsYear--;} renderAdsTab(); });
-  document.getElementById('adsNextBtn').addEventListener('click', () => { adsMonth++; if(adsMonth>11){adsMonth=0;adsYear++;} renderAdsTab(); });
-  wireAdsTabEvents(el);
+  if(adsFlashId){
+    const f = el.querySelector(`[data-flash-id="${adsFlashId}"]`);
+    if(f) f.classList.add('flash');
+    adsFlashId = null;
+  }
+  if(adsEdit && adsEdit.kind === 'ad') updateAdPreview();
 }
 
-function renderCampaignStrip(campaigns){
-  return campaigns.map(c => {
-    const obj = OBJECTIVES[c.objective] || OBJECTIVES.Traffic;
-    return `<div class="campaign-strip-row">
-      <div>
-        <b>${escapeHtml(c.name)}</b>
-        <span class="obj-pill">${obj.label}</span>
-        ${c.notes ? `<div style="font-size:11.5px;color:var(--ink-dim);margin-top:2px">${escapeHtml(c.notes)}</div>` : ''}
-      </div>
+function renderAdminCampaign(g){
+  const c = g.c;
+  const obj = OBJECTIVES[c.objective] || OBJECTIVES.Traffic;
+  const insightOpen = adsOpenInsights.has(c.id);
+  const adding = isAdding('adset', 'campId', c.id);
+  return `<div class="camp-card" data-flash-id="${c.id}">
+    <div class="camp-head">
+      <div class="camp-title"><span class="camp-name">${escapeHtml(c.name)}</span><span class="obj-pill">${obj.label}</span></div>
       <div class="row-actions">
-        <button class="small" data-addadset="${c.id}">＋ 廣告組合</button>
-        <button class="small" data-editcamp="${c.id}">編輯</button>
-        <button class="small danger" data-delcamp="${c.id}">刪除</button>
+        <button class="small" data-act="add-adset" data-c="${c.id}">＋ 廣告組合</button>
+        <button class="small" data-act="edit-camp" data-c="${c.id}">✎ 編輯</button>
       </div>
-    </div>`;
-  }).join('');
+    </div>
+    ${c.notes ? `<button class="link-btn" data-act="toggle-insight" data-c="${c.id}">${insightOpen ? '▾' : '▸'} 📈 成效總結與建議</button>
+      ${insightOpen ? `<div class="insight-wrap">${renderCampaignInsightBody(c)}</div>` : ''}` : ''}
+    ${isEditing('campaign', c.id) ? renderCampaignEditor() : ''}
+    ${g.adsets.map(as => renderAdminAdset(c, as)).join('')}
+    ${!g.adsets.length && !adding ? '<div class="empty slim">未有廣告組合，按「＋ 廣告組合」開始。</div>' : ''}
+    ${adding ? renderAdsetEditor() : ''}
+  </div>`;
 }
 
-/* ---------- collapse/expand toggles for campaign/adset/ad cards (shared by admin + public view) ---------- */
+function renderAdminAdset(c, as){
+  const status = computeAdSetStatus(as);
+  const tot = adsetTotals(c, as);
+  const budget = +as.budgetHKD || 0;
+  const pct = budget > 0 ? Math.min(100, tot.spend / budget * 100) : 0;
+  const open = adsOpenDetails.has(as.id);
+  const tg = as.targeting || {};
+  const chips = [
+    tg.age ? `<span class="chip">👤 ${escapeHtml(tg.age)}</span>` : '',
+    tg.gender ? `<span class="chip">${escapeHtml(tg.gender)}</span>` : '',
+    tg.location ? `<span class="chip">📍 ${escapeHtml(tg.location)}</span>` : '',
+    tg.placement ? `<span class="chip">📲 ${escapeHtml(tg.placement)}</span>` : ''
+  ].filter(Boolean).join('');
+  const interestChips = splitInterests(tg.interests).map(x => `<span class="chip dim">${escapeHtml(x)}</span>`).join('');
+  const details = open ? `<div class="as-details">
+      <div class="section-h" style="margin-top:0">🎯 目標受眾</div>
+      ${chips || interestChips ? `<div class="chips">${chips}</div>${interestChips ? `<div class="chips interest-chips">${interestChips}</div>` : ''}` : '<div class="hint">未有受眾設定，按「✎ 編輯組合」填寫。</div>'}
+      ${renderAdminChangeLog(c, as)}
+    </div>` : '';
+  return `<div class="as-card" data-flash-id="${as.id}">
+    <div class="as-head" data-act="toggle-details" data-a="${as.id}" title="展開 / 收起受眾同調整紀錄">
+      <div class="as-title">
+        <span class="chev">${open ? '▾' : '▸'}</span>
+        <span class="as-name">${escapeHtml(as.name)}</span>
+        <span class="status-pill ${statusPillClass(status)}">${STATUS_LABEL[status]}</span>
+      </div>
+      <button class="small" data-act="edit-adset" data-c="${c.id}" data-a="${as.id}">✎ 編輯組合</button>
+    </div>
+    <div class="as-stats">
+      <div class="as-stat"><div class="k">📅 投放期間</div><div class="v">${fmtShortDate(as.startDate)} – ${fmtShortDate(as.endDate)}</div></div>
+      <div class="as-stat"><div class="k">花費 / 預算</div><div class="v">${fmtHKD(tot.spend)}${budget ? `<span> / ${fmtHKD(budget)}</span>` : ''}</div>
+        ${budget ? `<div class="bar mini${tot.spend > budget ? ' over' : ''}"><div style="width:${pct}%"></div></div>` : ''}</div>
+      <div class="as-stat"><div class="k">${escapeHtml(tot.resultLabel)}</div><div class="v">${tot.resultValue.toLocaleString()}</div></div>
+      <div class="as-stat"><div class="k">${escapeHtml(tot.costLabel)}</div><div class="v accent">${tot.costPerResult}</div></div>
+      <div class="as-stat"><div class="k">CTR</div><div class="v">${tot.ctr}</div></div>
+    </div>
+    ${isEditing('adset', as.id) ? renderAdsetEditor() : ''}
+    ${details}
+    ${renderAdminAds(c, as)}
+  </div>`;
+}
+
+function renderAdminAds(c, as){
+  const ads = as.ads || [];
+  const rows = ads.map(a => {
+    const m = adMetrics(a, c.objective, as.resultType);
+    const editing = isEditing('ad', a.id);
+    return `<div class="ad-row${editing ? ' editing' : ''}" data-act="edit-ad" data-c="${c.id}" data-a="${as.id}" data-ad="${a.id}" data-flash-id="${a.id}" tabindex="0" role="button" aria-expanded="${editing}">
+        <div class="c name" title="${escapeHtml(a.name)}">${escapeHtml(a.name)}</div>
+        <div class="c" data-l="花費">${fmtHKD(a.spendHKD)}</div>
+        <div class="c" data-l="${escapeHtml(m.resultLabel)}">${m.resultValue.toLocaleString()}</div>
+        <div class="c" data-l="單次成本">${m.costPerResult}</div>
+        <div class="c" data-l="CTR">${m.ctr}</div>
+        <div class="c go">${editing ? '▾' : '✎'}</div>
+      </div>${editing ? renderAdEditor() : ''}`;
+  }).join('');
+  const adding = isAdding('ad', 'adsetId', as.id);
+  return `<div class="ad-table">
+    ${ads.length ? `<div class="ad-row head"><div class="c name">廣告</div><div class="c">花費</div><div class="c">結果</div><div class="c">單次成本</div><div class="c">CTR</div><div class="c go"></div></div>` : ''}
+    ${rows}
+    ${adding ? renderAdEditor() : `<button class="add-row" data-act="add-ad" data-c="${c.id}" data-a="${as.id}">＋ 新增廣告</button>`}
+  </div>`;
+}
+
+function renderAdminChangeLog(c, as){
+  const log = as.changeLog || [];
+  if(!log.length) return '';
+  const entries = log.slice().reverse().map(entry => {
+    const editing = isEditing('change', entry.id);
+    return `<div class="changelog-entry" data-flash-id="${entry.id}">
+      <div class="changelog-entry-head"><b>${escapeHtml(entry.date)}</b>
+        <button class="small changelog-del" data-act="edit-change" data-c="${c.id}" data-a="${as.id}" data-id="${entry.id}">${editing ? '▾ 編輯中' : '✎ 編輯'}</button>
+      </div>
+      ${(entry.changes||[]).map(ch => `<div>${describeChangeHtml(ch)}</div>`).join('')}
+    </div>${editing ? renderChangeEditor() : ''}`;
+  }).join('');
+  return `<div class="section-h">📝 投放調整紀錄</div><div class="changelog">${entries}</div>`;
+}
+
+/* ----- editors (rendered inline, directly under the item being edited) ----- */
+function efield(id, label, inner, cls, hint){
+  return `<div class="ef ${cls||''}"><label for="${id}">${label}</label>${inner}${hint ? `<div class="hint">${hint}</div>` : ''}</div>`;
+}
+function editorShell(title, body, opts){
+  return `<div class="editor" id="adsEditor">
+    <div class="editor-head"><div class="editor-title">${title}</div><button class="icon-btn" data-act="cancel" aria-label="關閉">✕</button></div>
+    ${body}
+    <div class="form-err" id="editorErr" role="alert" style="display:none"></div>
+    <div class="editor-actions">
+      <button class="primary" data-act="save">${opts.save}</button>
+      <button data-act="cancel">取消</button>
+      <span class="hint kbd">Enter 儲存 · Esc 取消</span>
+      <span class="spacer"></span>
+      ${opts.del ? `<button class="danger" data-act="delete">🗑 ${opts.del}</button>` : ''}
+    </div>
+  </div>`;
+}
+
+function renderCampaignEditor(){
+  const camp = adsEdit.draft;
+  const body = `
+    <div class="ef-grid">
+      ${efield('f_camp_name', '活動名稱', `<input id="f_camp_name" value="${escapeHtml(camp.name)}" placeholder="例：Suran_Scar_Conversations_1108">`, 'wide')}
+      ${efield('f_camp_obj', '目標 (Objective)', `<select id="f_camp_obj">${OBJECTIVE_KEYS.map(k => `<option value="${k}" ${camp.objective===k?'selected':''}>${OBJECTIVES[k].label}</option>`).join('')}</select>`, 'wide')}
+      ${efield('f_camp_notes', '成效總結與建議（客戶頁面都會見到）', `<textarea id="f_camp_notes" rows="5" placeholder="先寫成效總結，再用 (1) (2) (3) 列出下次投放建議">${escapeHtml(camp.notes||'')}</textarea>`, 'wide', '格式：先寫成效總結，再用 (1) (2) (3) 列出下次投放建議，頁面會自動分段顯示。')}
+    </div>`;
+  return editorShell(adsEdit.isNew ? '新增行銷活動 (Campaign)' : '編輯行銷活動 (Campaign)', body, { save: adsEdit.isNew ? '建立活動' : '儲存', del: adsEdit.isNew ? '' : '刪除活動' });
+}
+
+function renderAdsetEditor(){
+  const camp = findCamp(adsEdit.campId), as = adsEdit.draft;
+  const tg = as.targeting || emptyTargeting();
+  const isLeads = camp.objective === 'Leads';
+  const body = `
+    <div class="ef-section">基本資料</div>
+    <div class="ef-grid">
+      ${efield('f_as_name', '組合名稱', `<input id="f_as_name" value="${escapeHtml(as.name)}">`, 'wide')}
+      ${efield('f_as_start', '開始日期', `<input type="date" id="f_as_start" value="${as.startDate||''}">`)}
+      ${efield('f_as_end', '結束日期', `<input type="date" id="f_as_end" value="${as.endDate||''}">`)}
+      ${efield('f_as_budget', '預算', `<div class="affix"><span>HK$</span><input type="number" min="0" id="f_as_budget" value="${as.budgetHKD||''}" placeholder="0"></div>`)}
+      ${isLeads ? efield('f_as_resulttype', '名單收集方式', `<select id="f_as_resulttype">
+          <option value="form" ${as.resultType!=='messages'?'selected':''}>表單名單（名單數）</option>
+          <option value="messages" ${as.resultType==='messages'?'selected':''}>Messenger 對話（對話開始次數）</option>
+        </select>`) : ''}
+    </div>
+    <div class="ef-section">目標受眾 ${adsEdit.isNew ? '' : '<span class="hint">修改後會自動記錄落「投放調整紀錄」</span>'}</div>
+    <div class="ef-grid">
+      ${efield('f_as_age', '年齡層', `<input id="f_as_age" placeholder="例：25-45歲" value="${escapeHtml(tg.age)}">`)}
+      ${efield('f_as_gender', '性別', `<select id="f_as_gender">${['不限','女性','男性'].map(g => `<option ${tg.gender===g?'selected':''}>${g}</option>`).join('')}</select>`)}
+      ${efield('f_as_location', '地區', `<input id="f_as_location" placeholder="例：香港島" value="${escapeHtml(tg.location)}">`)}
+      ${efield('f_as_placement', '版位', `<input id="f_as_placement" placeholder="例：IG限時動態+帖文" value="${escapeHtml(tg.placement)}">`)}
+      ${efield('f_as_interests', '興趣 / 受眾特徵', `<input id="f_as_interests" placeholder="例：美容護膚、醫美療程、抗老保養" value="${escapeHtml(tg.interests)}">`, 'wide', '用「、」分隔每個興趣')}
+    </div>`;
+  return editorShell(
+    `${adsEdit.isNew ? '新增' : '編輯'}廣告組合 <span class="crumb">${escapeHtml(camp.name)}</span>`,
+    body, { save: adsEdit.isNew ? '建立組合' : '儲存', del: adsEdit.isNew ? '' : '刪除組合' });
+}
+
+function renderAdEditor(){
+  const camp = findCamp(adsEdit.campId), as = findAdset(adsEdit.campId, adsEdit.adsetId), ad = adsEdit.draft;
+  const obj = OBJECTIVES[camp.objective] || OBJECTIVES.Traffic;
+  const isAwareness = camp.objective === 'Awareness';
+  const num = (id, v) => `<input type="number" min="0" id="${id}" value="${v||''}" placeholder="0">`;
+  const body = `
+    <div class="ef-grid">
+      ${efield('f_ad_name', '廣告名稱', `<input id="f_ad_name" value="${escapeHtml(ad.name)}">`, 'wide')}
+    </div>
+    <div class="ef-section">成效數據 <span class="hint">由 Meta Ads Manager 抄過嚟</span></div>
+    <div class="ef-grid">
+      ${efield('f_ad_spend', '花費', `<div class="affix"><span>HK$</span>${num('f_ad_spend', ad.spendHKD)}</div>`)}
+      ${efield('f_ad_reach', '觸及人數', num('f_ad_reach', ad.reach))}
+      ${efield('f_ad_clicks', '點擊次數', num('f_ad_clicks', ad.clicks))}
+      ${isAwareness ? '' : efield('f_ad_results', escapeHtml(getResultMeta(camp.objective, as.resultType).resultLabel), num('f_ad_results', ad.results))}
+    </div>
+    <div class="preview" id="adPreview"></div>
+    ${isAwareness ? `<div class="hint">呢個活動目標係「${obj.label}」，${obj.resultLabel}會直接用觸及人數計算。</div>` : ''}
+    <div class="ef-grid" style="margin-top:10px">
+      ${efield('f_ad_notes', '備註（選填）', `<input id="f_ad_notes" value="${escapeHtml(ad.notes||'')}">`, 'wide')}
+    </div>`;
+  return editorShell(`${adsEdit.isNew ? '新增廣告' : '編輯廣告'} <span class="crumb">${escapeHtml(as.name)}</span>`, body,
+    { save: adsEdit.isNew ? '新增廣告' : '儲存', del: adsEdit.isNew ? '' : '刪除廣告' });
+}
+function updateAdPreview(){
+  const box = document.getElementById('adPreview');
+  if(!box || !adsEdit || adsEdit.kind !== 'ad') return;
+  const camp = findCamp(adsEdit.campId), as = findAdset(adsEdit.campId, adsEdit.adsetId);
+  const val = id => +(document.getElementById(id)?.value) || 0;
+  const reach = val('f_ad_reach');
+  const m = adMetrics({ spendHKD: val('f_ad_spend'), reach, clicks: val('f_ad_clicks'),
+    results: camp.objective === 'Awareness' ? reach : val('f_ad_results') }, camp.objective, as.resultType);
+  box.innerHTML = `<span>${escapeHtml(m.costLabel)} <b>${m.costPerResult}</b></span><span>CTR <b>${m.ctr}</b></span>`;
+}
+
+function renderChangeEditor(){
+  const entry = adsEdit.draft;
+  const rows = (entry.changes||[]).map((ch, i) => (ch.added || ch.removed)
+    ? `<div class="ef-grid">
+        ${efield(`f_chg_${i}_added`, `${escapeHtml(ch.label)} — 新增`, `<input id="f_chg_${i}_added" value="${escapeHtml((ch.added||[]).join('、'))}">`, '', '用「、」分隔')}
+        ${efield(`f_chg_${i}_removed`, `${escapeHtml(ch.label)} — 移除`, `<input id="f_chg_${i}_removed" value="${escapeHtml((ch.removed||[]).join('、'))}">`, '', '用「、」分隔')}
+      </div>`
+    : `<div class="ef-grid">
+        ${efield(`f_chg_${i}_from`, `${escapeHtml(ch.label)} — 由`, `<input id="f_chg_${i}_from" value="${escapeHtml(ch.from||'')}">`)}
+        ${efield(`f_chg_${i}_to`, `${escapeHtml(ch.label)} — 去`, `<input id="f_chg_${i}_to" value="${escapeHtml(ch.to||'')}">`)}
+      </div>`).join('');
+  const body = `<div class="ef-grid">${efield('f_chg_date', '日期', `<input type="date" id="f_chg_date" value="${entry.date||''}">`)}</div>${rows}`;
+  return editorShell('編輯投放調整紀錄', body, { save: '儲存', del: '刪除紀錄' });
+}
+
+/* ----- open / close / save / delete ----- */
+function openEditor(state){
+  adsEdit = state;
+  renderAdsTab();
+  const ed = document.getElementById('adsEditor');
+  if(ed){
+    ed.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    const first = ed.querySelector('input, textarea, select');
+    if(first) first.focus({ preventScroll: true });
+  }
+}
+function closeEditor(){ adsEdit = null; renderAdsTab(); }
+function editorError(msg){
+  const e = document.getElementById('editorErr');
+  if(e){ e.textContent = msg; e.style.display = 'block'; }
+}
+
+async function saveEditor(){
+  if(!adsEdit) return;
+  const v = id => (document.getElementById(id) || {}).value || '';
+  const e = adsEdit, d = e.draft;
+  let flashId = d.id;
+  if(e.kind === 'campaign'){
+    d.name = v('f_camp_name').trim() || '未命名活動';
+    d.objective = v('f_camp_obj');
+    d.notes = v('f_camp_notes').trim();
+    d.adsets = d.adsets || [];
+    if(e.isNew) currentData.campaigns.push(d);
+  }else if(e.kind === 'adset'){
+    const start = v('f_as_start'), end = v('f_as_end');
+    if(start && end && end < start) return editorError('結束日期唔可以早過開始日期。');
+    const camp = findCamp(e.campId);
+    const newTg = { age: v('f_as_age'), gender: v('f_as_gender'), location: v('f_as_location'), placement: v('f_as_placement'), interests: v('f_as_interests') };
+    d.name = v('f_as_name').trim() || '未命名組合';
+    d.startDate = start; d.endDate = end;
+    d.budgetHKD = +v('f_as_budget') || 0;
+    if(camp.objective === 'Leads') d.resultType = v('f_as_resulttype');
+    d.ads = d.ads || [];
+    if(!e.isNew){
+      const changes = diffTargeting(d.targeting, newTg);
+      if(changes.length){
+        d.changeLog = d.changeLog || [];
+        d.changeLog.push({ id: uid(), date: new Date().toISOString().slice(0,10), changes });
+      }
+    }
+    d.targeting = newTg;
+    if(e.isNew) camp.adsets.push(d);
+    // follow the ad set to its month so it doesn't "disappear" after saving
+    if((start || end) && !adsetInMonth(d, adsYear, adsMonth)){
+      const t = new Date((start || end) + 'T00:00:00'); adsYear = t.getFullYear(); adsMonth = t.getMonth();
+    }
+  }else if(e.kind === 'ad'){
+    const camp = findCamp(e.campId), as = findAdset(e.campId, e.adsetId);
+    d.name = v('f_ad_name').trim() || '未命名廣告';
+    d.spendHKD = +v('f_ad_spend') || 0;
+    d.reach = +v('f_ad_reach') || 0;
+    d.clicks = +v('f_ad_clicks') || 0;
+    d.results = camp.objective === 'Awareness' ? d.reach : (+v('f_ad_results') || 0);
+    d.notes = v('f_ad_notes').trim();
+    as.ads = as.ads || [];
+    if(e.isNew) as.ads.push(d);
+  }else if(e.kind === 'change'){
+    d.date = v('f_chg_date') || d.date;
+    d.changes = (d.changes||[]).map((ch, i) => (ch.added || ch.removed)
+      ? { field: ch.field, label: ch.label, added: splitInterests(v(`f_chg_${i}_added`)), removed: splitInterests(v(`f_chg_${i}_removed`)) }
+      : { field: ch.field, label: ch.label, from: v(`f_chg_${i}_from`).trim() || '—', to: v(`f_chg_${i}_to`).trim() || '—' });
+  }
+  const btn = document.querySelector('#adsEditor [data-act="save"]');
+  if(btn){ btn.disabled = true; btn.textContent = '儲存中…'; }
+  try{
+    await saveClient(currentId, currentData);
+  }catch(err){
+    if(btn){ btn.disabled = false; btn.textContent = '儲存'; }
+    return editorError('儲存失敗，請檢查網絡後再試。');
+  }
+  adsEdit = null;
+  adsFlashId = flashId;
+  renderAdsTab();
+}
+
+async function deleteEditorTarget(){
+  if(!adsEdit || adsEdit.isNew) return;
+  const e = adsEdit;
+  if(e.kind === 'campaign'){
+    if(!confirm('確定刪除呢個行銷活動？入面所有廣告組合同廣告都會一齊刪除。')) return;
+    currentData.campaigns = currentData.campaigns.filter(c => c.id !== e.id);
+  }else if(e.kind === 'adset'){
+    if(!confirm('確定刪除呢個廣告組合？入面所有廣告都會一齊刪除。')) return;
+    const camp = findCamp(e.campId); camp.adsets = camp.adsets.filter(a => a.id !== e.id);
+  }else if(e.kind === 'ad'){
+    if(!confirm('確定刪除呢個廣告？')) return;
+    const as = findAdset(e.campId, e.adsetId); as.ads = as.ads.filter(a => a.id !== e.id);
+  }else if(e.kind === 'change'){
+    if(!confirm('確定刪除呢條調整紀錄？客戶頁面都會同步移除。')) return;
+    const as = findAdset(e.campId, e.adsetId); as.changeLog = (as.changeLog||[]).filter(x => x.id !== e.id);
+  }
+  await saveClient(currentId, currentData);
+  adsEdit = null;
+  renderAdsTab();
+}
+
+/* ----- collapse/expand toggles for campaign/adset/ad cards (public client view only now) ----- */
 function bindCollapseToggles(el, rerender){
   el.querySelectorAll('[data-toggle-campaign]').forEach(b => b.addEventListener('click', e => {
     e.stopPropagation();
@@ -979,278 +1399,62 @@ function bindCollapseToggles(el, rerender){
   }));
 }
 
+/* ----- one delegated listener set for the whole tab (attached once; innerHTML is re-rendered freely) ----- */
 function wireAdsTabEvents(el){
-  bindCollapseToggles(el, renderAdsTab);
-  el.querySelectorAll('[data-editcamp]').forEach(b => b.addEventListener('click', () => showCampaignForm(b.dataset.editcamp)));
-  el.querySelectorAll('[data-delcamp]').forEach(b => b.addEventListener('click', async () => {
-    if(!confirm('確定刪除呢個行銷活動？入面所有廣告組合同廣告都會一齊刪除。')) return;
-    currentData.campaigns = currentData.campaigns.filter(c => c.id !== b.dataset.delcamp);
-    await saveClient(currentId, currentData);
-    renderAdsTab();
-  }));
-  el.querySelectorAll('[data-addadset]').forEach(b => b.addEventListener('click', () => showAdSetForm(b.dataset.addadset, null)));
-  el.querySelectorAll('[data-editadset]').forEach(b => {
-    const [cid, asid] = b.dataset.editadset.split('|');
-    b.addEventListener('click', () => showAdSetForm(cid, asid));
-  });
-  el.querySelectorAll('[data-deladset]').forEach(b => {
-    const [cid, asid] = b.dataset.deladset.split('|');
-    b.addEventListener('click', async () => {
-      if(!confirm('確定刪除呢個廣告組合？入面所有廣告都會一齊刪除。')) return;
-      const camp = currentData.campaigns.find(c => c.id === cid);
-      camp.adsets = camp.adsets.filter(as => as.id !== asid);
-      await saveClient(currentId, currentData);
-      renderAdsTab();
-    });
-  });
-  el.querySelectorAll('[data-addad]').forEach(b => {
-    const [cid, asid] = b.dataset.addad.split('|');
-    b.addEventListener('click', () => showAdForm(cid, asid, null));
-  });
-  el.querySelectorAll('[data-editad]').forEach(b => {
-    const [cid, asid, adid] = b.dataset.editad.split('|');
-    b.addEventListener('click', () => showAdForm(cid, asid, adid));
-  });
-  el.querySelectorAll('[data-delad]').forEach(b => {
-    const [cid, asid, adid] = b.dataset.delad.split('|');
-    b.addEventListener('click', async () => {
-      if(!confirm('確定刪除呢個廣告？')) return;
-      const camp = currentData.campaigns.find(c => c.id === cid);
-      const as = camp.adsets.find(x => x.id === asid);
-      as.ads = as.ads.filter(a => a.id !== adid);
-      await saveClient(currentId, currentData);
-      renderAdsTab();
-    });
-  });
-  el.querySelectorAll('[data-editchange]').forEach(b => {
-    const [cid, asid, changeId] = b.dataset.editchange.split('|');
-    b.addEventListener('click', () => showChangeLogEditForm(cid, asid, changeId));
-  });
-  el.querySelectorAll('[data-delchange]').forEach(b => {
-    const [cid, asid, changeId] = b.dataset.delchange.split('|');
-    b.addEventListener('click', async () => {
-      if(!confirm('確定刪除呢條調整紀錄？客戶頁面都會同步移除。')) return;
-      const camp = currentData.campaigns.find(c => c.id === cid);
-      const as = camp.adsets.find(x => x.id === asid);
-      as.changeLog = (as.changeLog||[]).filter(e => e.id !== changeId);
-      await saveClient(currentId, currentData);
-      renderAdsTab();
-    });
-  });
-}
-
-function showCampaignForm(campId){
-  currentData.campaigns = currentData.campaigns || [];
-  const camp = campId ? currentData.campaigns.find(c=>c.id===campId) : { id: uid(), name:'', objective:'Traffic', notes:'', adsets: [] };
-  const holder = document.getElementById('adFormHolder');
-  holder.innerHTML = `
-    <div class="panel">
-      <div class="section-label" style="margin-top:0">行銷活動 (Campaign)</div>
-      <div class="field-row">
-        <div><label>活動名稱</label><input id="f_camp_name" value="${escapeHtml(camp.name)}"></div>
-        <div><label>目標 (Objective)</label>
-          <select id="f_camp_obj">
-            ${OBJECTIVE_KEYS.map(k=>`<option value="${k}" ${camp.objective===k?'selected':''}>${OBJECTIVES[k].label}</option>`).join('')}
-          </select>
-        </div>
-      </div>
-      <div style="margin-bottom:8px">
-        <label style="font-size:11px;color:var(--ink-dim)">備註</label>
-        <input id="f_camp_notes" style="width:100%" value="${escapeHtml(camp.notes||'')}">
-      </div>
-      <div class="footer-actions">
-        <button class="primary" id="saveCampBtn">儲存活動</button>
-        <button id="cancelCampBtn">取消</button>
-      </div>
-    </div>
-  `;
-  document.getElementById('cancelCampBtn').addEventListener('click', () => holder.innerHTML='');
-  document.getElementById('saveCampBtn').addEventListener('click', async () => {
-    camp.name = document.getElementById('f_camp_name').value.trim() || '未命名活動';
-    camp.objective = document.getElementById('f_camp_obj').value;
-    camp.notes = document.getElementById('f_camp_notes').value;
-    camp.adsets = camp.adsets || [];
-    const idx = currentData.campaigns.findIndex(c=>c.id===camp.id);
-    if(idx>=0) currentData.campaigns[idx]=camp; else currentData.campaigns.push(camp);
-    await saveClient(currentId, currentData);
-    holder.innerHTML='';
-    renderAdsTab();
-  });
-}
-
-function showAdSetForm(campId, adsetId){
-  const camp = currentData.campaigns.find(c=>c.id===campId);
-  camp.adsets = camp.adsets || [];
-  const as = adsetId ? camp.adsets.find(x=>x.id===adsetId) : {
-    id: uid(), name:'', startDate:'', endDate:'', budgetHKD:0, targeting: emptyTargeting(), resultType:'form', ads: []
-  };
-  if(!as.targeting) as.targeting = emptyTargeting();
-  const tg = as.targeting;
-  const isLeads = camp.objective === 'Leads';
-  const holder = document.getElementById('adFormHolder');
-  holder.innerHTML = `
-    <div class="panel">
-      <div class="section-label" style="margin-top:0">廣告組合 (Ad Set) － ${escapeHtml(camp.name)}</div>
-      <div class="field-row">
-        <div><label>組合名稱</label><input id="f_as_name" value="${escapeHtml(as.name)}"></div>
-        <div><label>開始日期</label><input type="date" id="f_as_start" value="${as.startDate||''}"></div>
-        <div><label>結束日期</label><input type="date" id="f_as_end" value="${as.endDate||''}"></div>
-        <div><label>預算 (HK$)</label><input type="number" id="f_as_budget" value="${as.budgetHKD||0}"></div>
-      </div>
-      ${isLeads ? `<div class="field-row">
-        <div><label>名單收集方式</label>
-          <select id="f_as_resulttype">
-            <option value="form" ${as.resultType!=='messages'?'selected':''}>表單名單（名單數 / 每個名單成本）</option>
-            <option value="messages" ${as.resultType==='messages'?'selected':''}>Messenger對話（對話開始次數 / 每次對話開始成本）</option>
-          </select>
-        </div>
-      </div>` : ''}
-      <div class="section-label">目標受眾設定</div>
-      <div class="field-row">
-        <div><label>年齡層</label><input id="f_as_age" placeholder="例：25-45歲" value="${escapeHtml(tg.age)}"></div>
-        <div><label>性別</label>
-          <select id="f_as_gender">
-            ${['不限','女性','男性'].map(g=>`<option ${tg.gender===g?'selected':''}>${g}</option>`).join('')}
-          </select>
-        </div>
-        <div><label>地區</label><input id="f_as_location" placeholder="例：香港島" value="${escapeHtml(tg.location)}"></div>
-        <div><label>版位</label><input id="f_as_placement" placeholder="例：IG限時動態+摡文" value="${escapeHtml(tg.placement)}"></div>
-      </div>
-      <div style="margin-bottom:8px">
-        <label style="font-size:11px;color:var(--ink-dim)">興趣 / 受眾特徵</label>
-        <input id="f_as_interests" style="width:100%" placeholder="例：美容護膚、醫美療程、抗老保養" value="${escapeHtml(tg.interests)}">
-      </div>
-      <div class="footer-actions">
-        <button class="primary" id="saveAdSetBtn">儲存組合</button>
-        <button id="cancelAdSetBtn">取消</button>
-      </div>
-    </div>
-  `;
-  document.getElementById('cancelAdSetBtn').addEventListener('click', () => holder.innerHTML='');
-  document.getElementById('saveAdSetBtn').addEventListener('click', async () => {
-    as.name = document.getElementById('f_as_name').value.trim() || '未命名組合';
-    as.startDate = document.getElementById('f_as_start').value;
-    as.endDate = document.getElementById('f_as_end').value;
-    as.budgetHKD = +document.getElementById('f_as_budget').value || 0;
-    if(isLeads) as.resultType = document.getElementById('f_as_resulttype').value;
-    as.ads = as.ads || [];
-    const newTargeting = {
-      age: document.getElementById('f_as_age').value,
-      gender: document.getElementById('f_as_gender').value,
-      location: document.getElementById('f_as_location').value,
-      placement: document.getElementById('f_as_placement').value,
-      interests: document.getElementById('f_as_interests').value
-    };
-    if(adsetId){
-      const changes = diffTargeting(as.targeting, newTargeting);
-      if(changes.length){
-        as.changeLog = as.changeLog || [];
-        as.changeLog.push({ id: uid(), date: new Date().toISOString().slice(0,10), changes });
-      }
+  if(el.dataset.wired) return;
+  el.dataset.wired = '1';
+  el.addEventListener('click', e => {
+    const t = e.target.closest('[data-act]');
+    if(!t || !el.contains(t)) return;
+    const act = t.dataset.act, c = t.dataset.c, a = t.dataset.a, ad = t.dataset.ad, id = t.dataset.id;
+    if(act === 'year-prev'){ adsYear--; adsEdit = null; return renderAdsTab(); }
+    if(act === 'year-next'){ adsYear++; adsEdit = null; return renderAdsTab(); }
+    if(act === 'today'){ const n = new Date(); adsYear = n.getFullYear(); adsMonth = n.getMonth(); adsEdit = null; return renderAdsTab(); }
+    if(act === 'month'){ adsMonth = +t.dataset.m; adsEdit = null; return renderAdsTab(); }
+    if(act === 'toggle-details'){
+      if(adsOpenDetails.has(a)) adsOpenDetails.delete(a); else adsOpenDetails.add(a);
+      return renderAdsTab();
     }
-    as.targeting = newTargeting;
-    const idx = camp.adsets.findIndex(x=>x.id===as.id);
-    if(idx>=0) camp.adsets[idx]=as; else camp.adsets.push(as);
-    await saveClient(currentId, currentData);
-    holder.innerHTML='';
-    renderAdsTab();
-  });
-}
-
-function showAdForm(campId, adsetId, adId){
-  const camp = currentData.campaigns.find(c=>c.id===campId);
-  const as = camp.adsets.find(x=>x.id===adsetId);
-  as.ads = as.ads || [];
-  const ad = adId ? as.ads.find(a=>a.id===adId) : { id: uid(), name:'', spendHKD:0, reach:0, clicks:0, results:0, notes:'' };
-  const obj = OBJECTIVES[camp.objective] || OBJECTIVES.Traffic;
-  const isAwareness = camp.objective === 'Awareness';
-  const holder = document.getElementById('adFormHolder');
-  holder.innerHTML = `
-    <div class="panel">
-      <div class="section-label" style="margin-top:0">廣告 (Ad) － ${escapeHtml(as.name)}・目標：${obj.label}</div>
-      <div class="field-row">
-        <div><label>廣告名稱</label><input id="f_ad_name" value="${escapeHtml(ad.name)}"></div>
-        <div><label>花費 (HK$)</label><input type="number" id="f_ad_spend" value="${ad.spendHKD||0}"></div>
-        <div><label>觸及人數</label><input type="number" id="f_ad_reach" value="${ad.reach||0}"></div>
-        <div><label>點擊次數</label><input type="number" id="f_ad_clicks" value="${ad.clicks||0}"></div>
-      </div>
-      ${isAwareness ? `<p style="font-size:11.5px;color:var(--ink-dim);margin:0 0 8px">呢個活動嘅目標係「${obj.label}」，${obj.resultLabel}／${obj.costLabel}會直接用返上面嘅觸及人數計算。</p>` : `
-      <div class="field-row">
-        <div><label>${obj.resultLabel}</label><input type="number" id="f_ad_results" value="${ad.results||0}"></div>
-      </div>`}
-      <div style="margin-bottom:8px">
-        <label style="font-size:11px;color:var(--ink-dim)">備註</label>
-        <input id="f_ad_notes" style="width:100%" value="${escapeHtml(ad.notes||'')}">
-      </div>
-      <div class="footer-actions">
-        <button class="primary" id="saveAdBtn">儲存廣告</button>
-        <button id="cancelAdBtn">取消</button>
-      </div>
-    </div>
-  `;
-  document.getElementById('cancelAdBtn').addEventListener('click', () => holder.innerHTML='');
-  document.getElementById('saveAdBtn').addEventListener('click', async () => {
-    ad.name = document.getElementById('f_ad_name').value.trim() || '未命名廣告';
-    ad.spendHKD = +document.getElementById('f_ad_spend').value || 0;
-    ad.reach = +document.getElementById('f_ad_reach').value || 0;
-    ad.clicks = +document.getElementById('f_ad_clicks').value || 0;
-    ad.results = isAwareness ? ad.reach : (+document.getElementById('f_ad_results').value || 0);
-    ad.notes = document.getElementById('f_ad_notes').value;
-    const idx = as.ads.findIndex(a=>a.id===ad.id);
-    if(idx>=0) as.ads[idx]=ad; else as.ads.push(ad);
-    await saveClient(currentId, currentData);
-    holder.innerHTML='';
-    renderAdsTab();
-  });
-}
-
-function showChangeLogEditForm(campId, adsetId, changeId){
-  const camp = currentData.campaigns.find(c=>c.id===campId);
-  const as = camp.adsets.find(x=>x.id===adsetId);
-  const entry = (as.changeLog||[]).find(e=>e.id===changeId);
-  if(!entry) return;
-  const holder = document.getElementById('adFormHolder');
-  const rows = (entry.changes||[]).map((ch, i) => {
-    if(ch.added || ch.removed){
-      return `<div class="field-row">
-        <div><label>${escapeHtml(ch.label)}（新增，用「、」分隔）</label><input id="f_chg_${i}_added" value="${escapeHtml((ch.added||[]).join('、'))}"></div>
-        <div><label>${escapeHtml(ch.label)}（移除，用「、」分隔）</label><input id="f_chg_${i}_removed" value="${escapeHtml((ch.removed||[]).join('、'))}"></div>
-      </div>`;
+    if(act === 'toggle-insight'){
+      if(adsOpenInsights.has(c)) adsOpenInsights.delete(c); else adsOpenInsights.add(c);
+      return renderAdsTab();
     }
-    return `<div class="field-row">
-      <div><label>${escapeHtml(ch.label)}（由）</label><input id="f_chg_${i}_from" value="${escapeHtml(ch.from||'')}"></div>
-      <div><label>${escapeHtml(ch.label)}（去）</label><input id="f_chg_${i}_to" value="${escapeHtml(ch.to||'')}"></div>
-    </div>`;
-  }).join('');
-  holder.innerHTML = `
-    <div class="panel">
-      <div class="section-label" style="margin-top:0">編輯投放調整紀錄 － ${escapeHtml(as.name)}</div>
-      <div class="field-row">
-        <div><label>日期</label><input type="date" id="f_chg_date" value="${entry.date||''}"></div>
-      </div>
-      ${rows}
-      <div class="footer-actions">
-        <button class="primary" id="saveChangeLogBtn">儲存</button>
-        <button id="cancelChangeLogBtn">取消</button>
-      </div>
-    </div>
-  `;
-  document.getElementById('cancelChangeLogBtn').addEventListener('click', () => holder.innerHTML='');
-  document.getElementById('saveChangeLogBtn').addEventListener('click', async () => {
-    entry.date = document.getElementById('f_chg_date').value || entry.date;
-    entry.changes = (entry.changes||[]).map((ch, i) => {
-      if(ch.added || ch.removed){
-        const added = splitInterests(document.getElementById(`f_chg_${i}_added`).value);
-        const removed = splitInterests(document.getElementById(`f_chg_${i}_removed`).value);
-        return { field: ch.field, label: ch.label, added, removed };
-      }
-      const from = document.getElementById(`f_chg_${i}_from`).value.trim() || '—';
-      const to = document.getElementById(`f_chg_${i}_to`).value.trim() || '—';
-      return { field: ch.field, label: ch.label, from, to };
-    });
-    await saveClient(currentId, currentData);
-    holder.innerHTML='';
-    renderAdsTab();
+    if(act === 'cancel') return closeEditor();
+    if(act === 'save') return saveEditor();
+    if(act === 'delete') return deleteEditorTarget();
+    if(act === 'new-camp') return openEditor({ kind:'campaign', isNew:true, id:uid(), draft:{ id:uid(), name:'', objective:'Traffic', notes:'', adsets:[] } });
+    if(act === 'edit-camp'){
+      if(isEditing('campaign', c)) return closeEditor();
+      return openEditor({ kind:'campaign', id:c, draft:findCamp(c) });
+    }
+    if(act === 'add-adset'){
+      const [s, en] = monthRange(adsYear, adsMonth);
+      return openEditor({ kind:'adset', isNew:true, campId:c, draft:{ id:uid(), name:'', startDate:s, endDate:en, budgetHKD:0, targeting:emptyTargeting(), resultType:'form', ads:[] } });
+    }
+    if(act === 'edit-adset'){
+      if(isEditing('adset', a)) return closeEditor();
+      return openEditor({ kind:'adset', campId:c, id:a, draft:findAdset(c, a) });
+    }
+    if(act === 'add-ad') return openEditor({ kind:'ad', isNew:true, campId:c, adsetId:a, draft:{ id:uid(), name:'', spendHKD:0, reach:0, clicks:0, results:0, notes:'' } });
+    if(act === 'edit-ad'){
+      if(isEditing('ad', ad)) return closeEditor();
+      return openEditor({ kind:'ad', campId:c, adsetId:a, id:ad, draft:findAdset(c, a).ads.find(x => x.id === ad) });
+    }
+    if(act === 'edit-change'){
+      if(isEditing('change', id)) return closeEditor();
+      return openEditor({ kind:'change', campId:c, adsetId:a, id, draft:findAdset(c, a).changeLog.find(x => x.id === id) });
+    }
+  });
+  el.addEventListener('input', e => {
+    if(adsEdit && adsEdit.kind === 'ad' && e.target.closest('#adsEditor')) updateAdPreview();
+  });
+  el.addEventListener('keydown', e => {
+    const row = e.target.closest && e.target.closest('.ad-row[role="button"]');
+    if(row && e.target === row && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); row.click(); return; }
+    if(!adsEdit || !e.target.closest || !e.target.closest('#adsEditor')) return;
+    if(e.key === 'Escape'){ e.preventDefault(); closeEditor(); }
+    else if(e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'BUTTON'){ e.preventDefault(); saveEditor(); }
+    else if(e.key === 'Enter' && (e.ctrlKey || e.metaKey)){ e.preventDefault(); saveEditor(); }
   });
 }
 
